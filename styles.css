@@ -402,7 +402,7 @@ body {
     width: 100%;
     max-width: min(90vw, 520px, 80vh);
     aspect-ratio: 1 / 1;
-    margin: 0 auto;
+    margin: 0 auto 76px auto;
     border-radius: var(--border-radius-lg);
     background: #fff;
     border: 8px solid var(--neutral-dark);
