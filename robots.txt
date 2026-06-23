@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ludo.resencegames.com/sitemap.xml
