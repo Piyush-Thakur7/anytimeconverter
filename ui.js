@@ -16,6 +16,10 @@ const LudoUI = (() => {
         document.querySelectorAll('.screen').forEach(el => {
             el.classList.toggle('active', el.id === id);
         });
+        const quitBtn = document.getElementById('quit-btn');
+        if (quitBtn) {
+            quitBtn.style.display = (id === 'play-screen') ? 'flex' : 'none';
+        }
     }
 
     // ─── Confetti Effect ──────────────────────────────────
@@ -142,9 +146,11 @@ const LudoUI = (() => {
         const quitBtn = document.getElementById('quit-btn');
         if (quitBtn) {
             quitBtn.addEventListener('click', () => {
-                if (window.LudoSounds) LudoSounds.playClick();
-                if (window.LudoGame) window.LudoGame.stop();
-                showScreen('lobby-screen');
+                if (confirm("Are you sure you want to quit the current match? Your progress will be lost.")) {
+                    if (window.LudoSounds) LudoSounds.playClick();
+                    if (window.LudoGame) window.LudoGame.stop();
+                    showScreen('lobby-screen');
+                }
             });
         }
 
@@ -185,23 +191,7 @@ const LudoUI = (() => {
             });
         }
 
-        // ── Share / Invite Button ──
-        const inviteBtn = document.getElementById('invite-btn');
-        if (inviteBtn) {
-            inviteBtn.addEventListener('click', () => {
-                if (navigator.share) {
-                    navigator.share({
-                        title: 'Play Ludo Online — Free',
-                        text: 'Come play Ludo with me! 🎲',
-                        url: window.location.href
-                    });
-                } else if (navigator.clipboard) {
-                    navigator.clipboard.writeText(window.location.href);
-                    inviteBtn.textContent = '✅ Copied!';
-                    setTimeout(() => { inviteBtn.textContent = '📤 Share'; }, 2000);
-                }
-            });
-        }
+
 
         // ── Tutorial Overlay ──
         const tutorial = document.getElementById('tutorial-overlay');
