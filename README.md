@@ -1,4 +1,4 @@
-# 🎲 Ludo World Online - Free Online Ludo Game
+# 🎲 Ludo Online - Free Online Ludo Game
 
 A complete, production-ready, lightweight Ludo board game built as a single-page web app. It is simple, fun, responsive, and requires no downloads or signups.
 
