@@ -441,23 +441,23 @@ body {
 }
 
 .dice-container.green {
-    top: -24px;
-    left: -24px;
+    top: -76px;
+    left: 12px;
 }
 
 .dice-container.yellow {
-    top: -24px;
-    right: -24px;
+    top: -76px;
+    right: 12px;
 }
 
 .dice-container.blue {
-    bottom: -24px;
-    right: -24px;
+    bottom: -76px;
+    right: 12px;
 }
 
 .dice-container.red {
-    bottom: -24px;
-    left: -24px;
+    bottom: -76px;
+    left: 12px;
 }
 
 .dice-btn {
