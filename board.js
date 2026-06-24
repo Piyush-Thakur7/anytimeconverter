@@ -7,6 +7,9 @@
 
 const LudoBoard = (() => {
 
+    let offscreenCanvas = null;
+    let offscreenCtx = null;
+
     // ─── Track & Coordinate Data ──────────────────────────
 
     /** 52-cell clockwise outer track. (col, row) with (0,0) at top-left. */
@@ -137,27 +140,40 @@ const LudoBoard = (() => {
      * @returns {Array} hitboxes - [{player, id, x, y, r}] for click detection
      */
     function drawBoard(canvas, tokens, movable) {
-        const ctx = canvas.getContext('2d');
+        // 1. Batch all read operations BEFORE any write operations
+        const width = canvas.width;
+        const height = canvas.height;
         const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) || 1;
-        ctx.save();
-        ctx.scale(dpr, dpr);
+        const S = (width / dpr) / 15;  // cell size
+        const W = width / dpr;
 
-        const S = (canvas.width / dpr) / 15;  // cell size
-        const W = canvas.width / dpr;
+        // 2. Initialize offscreen canvas if needed
+        if (!offscreenCanvas) {
+            offscreenCanvas = document.createElement('canvas');
+        }
+        if (offscreenCanvas.width !== width || offscreenCanvas.height !== height) {
+            offscreenCanvas.width = width;
+            offscreenCanvas.height = height;
+            offscreenCtx = offscreenCanvas.getContext('2d');
+        }
+
+        const oCtx = offscreenCtx;
+        oCtx.save();
+        oCtx.scale(dpr, dpr);
 
         // ── 1. Background ──
-        ctx.fillStyle = '#ecf0f1';
-        ctx.fillRect(0, 0, W, W);
+        oCtx.fillStyle = '#ecf0f1';
+        oCtx.fillRect(0, 0, W, W);
 
         // ── 2. Grid lines for track arms ──
-        ctx.strokeStyle = '#bdc3c7';
-        ctx.lineWidth = 1;
+        oCtx.strokeStyle = '#bdc3c7';
+        oCtx.lineWidth = 1;
         for (let c = 0; c < 15; c++) {
             for (let r = 0; r < 15; r++) {
                 const inBase = (c<6&&r<6)||(c>8&&r<6)||(c<6&&r>8)||(c>8&&r>8);
                 const inCenter = c>=6&&c<=8&&r>=6&&r<=8;
                 if (!inBase && !inCenter) {
-                    ctx.strokeRect(c * S, r * S, S, S);
+                    oCtx.strokeRect(c * S, r * S, S, S);
                 }
             }
         }
@@ -168,29 +184,29 @@ const LudoBoard = (() => {
             const bx = b.gx * S, by = b.gy * S, size = 6 * S;
 
             // Colored background
-            ctx.fillStyle = col.fill;
-            ctx.fillRect(bx, by, size, size);
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(bx, by, size, size);
+            oCtx.fillStyle = col.fill;
+            oCtx.fillRect(bx, by, size, size);
+            oCtx.strokeStyle = '#2c3e50';
+            oCtx.lineWidth = 3;
+            oCtx.strokeRect(bx, by, size, size);
 
             // Inner white card
             const p = S * 0.85;
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(bx + p, by + p, size - 2*p, size - 2*p);
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(bx + p, by + p, size - 2*p, size - 2*p);
+            oCtx.fillStyle = '#fff';
+            oCtx.fillRect(bx + p, by + p, size - 2*p, size - 2*p);
+            oCtx.strokeStyle = '#2c3e50';
+            oCtx.lineWidth = 2;
+            oCtx.strokeRect(bx + p, by + p, size - 2*p, size - 2*p);
 
             // Pocket circles
             YARD[b.color].forEach(pocket => {
-                ctx.beginPath();
-                ctx.arc(pocket.x * S, pocket.y * S, S * 0.55, 0, Math.PI * 2);
-                ctx.fillStyle = col.bg;
-                ctx.fill();
-                ctx.strokeStyle = col.fill;
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
+                oCtx.beginPath();
+                oCtx.arc(pocket.x * S, pocket.y * S, S * 0.55, 0, Math.PI * 2);
+                oCtx.fillStyle = col.bg;
+                oCtx.fill();
+                oCtx.strokeStyle = col.fill;
+                oCtx.lineWidth = 2.5;
+                oCtx.stroke();
             });
         });
 
@@ -200,19 +216,19 @@ const LudoBoard = (() => {
 
             // Start cell
             const sc = TRACK[START[color]];
-            ctx.fillStyle = col.fill;
-            ctx.fillRect(sc.x * S, sc.y * S, S, S);
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(sc.x * S, sc.y * S, S, S);
+            oCtx.fillStyle = col.fill;
+            oCtx.fillRect(sc.x * S, sc.y * S, S, S);
+            oCtx.strokeStyle = '#2c3e50';
+            oCtx.lineWidth = 1;
+            oCtx.strokeRect(sc.x * S, sc.y * S, S, S);
 
             // Home stretch cells
             HOME[color].forEach(cell => {
-                ctx.fillStyle = col.fill;
-                ctx.fillRect(cell.x * S, cell.y * S, S, S);
-                ctx.strokeStyle = '#2c3e50';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(cell.x * S, cell.y * S, S, S);
+                oCtx.fillStyle = col.fill;
+                oCtx.fillRect(cell.x * S, cell.y * S, S, S);
+                oCtx.strokeStyle = '#2c3e50';
+                oCtx.lineWidth = 1;
+                oCtx.strokeRect(cell.x * S, cell.y * S, S, S);
             });
         });
 
@@ -221,34 +237,34 @@ const LudoBoard = (() => {
             const cell = TRACK[idx];
             const cx = (cell.x + 0.5) * S, cy = (cell.y + 0.5) * S;
             let isStart = Object.values(START).includes(idx);
-            drawStar(ctx, cx, cy, S * 0.32, isStart ? '#fff' : '#f1c40f');
+            drawStar(oCtx, cx, cy, S * 0.32, isStart ? '#fff' : '#f1c40f');
         });
 
         // ── 6. Center home triangles (colors match home stretches) ──
         const cL = 6 * S, cT = 6 * S, cS = 3 * S;
         const mx = cL + cS / 2, my = cT + cS / 2;
-        ctx.strokeStyle = '#2c3e50';
-        ctx.lineWidth = 2.5;
+        oCtx.strokeStyle = '#2c3e50';
+        oCtx.lineWidth = 2.5;
 
         // Green = Left (green home stretch enters from left)
-        ctx.beginPath();
-        ctx.moveTo(cL, cT); ctx.lineTo(mx, my); ctx.lineTo(cL, cT + cS);
-        ctx.closePath(); ctx.fillStyle = COLORS.green.fill; ctx.fill(); ctx.stroke();
+        oCtx.beginPath();
+        oCtx.moveTo(cL, cT); oCtx.lineTo(mx, my); oCtx.lineTo(cL, cT + cS);
+        oCtx.closePath(); oCtx.fillStyle = COLORS.green.fill; oCtx.fill(); oCtx.stroke();
 
         // Yellow = Top (yellow home stretch enters from top)
-        ctx.beginPath();
-        ctx.moveTo(cL, cT); ctx.lineTo(mx, my); ctx.lineTo(cL + cS, cT);
-        ctx.closePath(); ctx.fillStyle = COLORS.yellow.fill; ctx.fill(); ctx.stroke();
+        oCtx.beginPath();
+        oCtx.moveTo(cL, cT); oCtx.lineTo(mx, my); oCtx.lineTo(cL + cS, cT);
+        oCtx.closePath(); oCtx.fillStyle = COLORS.yellow.fill; oCtx.fill(); oCtx.stroke();
 
         // Blue = Right (blue home stretch enters from right)
-        ctx.beginPath();
-        ctx.moveTo(cL + cS, cT); ctx.lineTo(mx, my); ctx.lineTo(cL + cS, cT + cS);
-        ctx.closePath(); ctx.fillStyle = COLORS.blue.fill; ctx.fill(); ctx.stroke();
+        oCtx.beginPath();
+        oCtx.moveTo(cL + cS, cT); oCtx.lineTo(mx, my); oCtx.lineTo(cL + cS, cT + cS);
+        oCtx.closePath(); oCtx.fillStyle = COLORS.blue.fill; oCtx.fill(); oCtx.stroke();
 
         // Red = Bottom (red home stretch enters from bottom)
-        ctx.beginPath();
-        ctx.moveTo(cL, cT + cS); ctx.lineTo(mx, my); ctx.lineTo(cL + cS, cT + cS);
-        ctx.closePath(); ctx.fillStyle = COLORS.red.fill; ctx.fill(); ctx.stroke();
+        oCtx.beginPath();
+        oCtx.moveTo(cL, cT + cS); oCtx.lineTo(mx, my); oCtx.lineTo(cL + cS, cT + cS);
+        oCtx.closePath(); oCtx.fillStyle = COLORS.red.fill; oCtx.fill(); oCtx.stroke();
 
         // ── 7. Group tokens by cell for stacking ──
         const groups = {};
@@ -300,69 +316,69 @@ const LudoBoard = (() => {
                 // Pulsing glow for movable tokens
                 if (isMovable) {
                     const pulse = Math.sin(Date.now() / 200) * 3;
-                    ctx.beginPath();
-                    ctx.ellipse(sx, sy - rad * 0.05, rad * 0.85 + pulse, rad * 1.0 + pulse, 0, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(241, 196, 15, 0.4)';
-                    ctx.fill();
-                    ctx.strokeStyle = '#f1c40f';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
+                    oCtx.beginPath();
+                    oCtx.ellipse(sx, sy - rad * 0.05, rad * 0.85 + pulse, rad * 1.0 + pulse, 0, 0, Math.PI * 2);
+                    oCtx.fillStyle = 'rgba(241, 196, 15, 0.4)';
+                    oCtx.fill();
+                    oCtx.strokeStyle = '#f1c40f';
+                    oCtx.lineWidth = 2;
+                    oCtx.stroke();
                 }
 
                 // 1. Drop shadow below to feel "lifted" off the board
-                ctx.beginPath();
-                ctx.ellipse(sx, sy + rad * 0.65, rad * 0.75, rad * 0.22, 0, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
-                ctx.fill();
+                oCtx.beginPath();
+                oCtx.ellipse(sx, sy + rad * 0.65, rad * 0.75, rad * 0.22, 0, 0, Math.PI * 2);
+                oCtx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+                oCtx.fill();
 
                 // 2. Base
-                ctx.beginPath();
-                ctx.ellipse(sx, sy + rad * 0.55, rad * 0.7, rad * 0.2, 0, 0, Math.PI * 2);
-                const baseGrad = ctx.createLinearGradient(sx - rad * 0.7, sy + rad * 0.35, sx + rad * 0.7, sy + rad * 0.75);
+                oCtx.beginPath();
+                oCtx.ellipse(sx, sy + rad * 0.55, rad * 0.7, rad * 0.2, 0, 0, Math.PI * 2);
+                const baseGrad = oCtx.createLinearGradient(sx - rad * 0.7, sy + rad * 0.35, sx + rad * 0.7, sy + rad * 0.75);
                 baseGrad.addColorStop(0, col.light);
                 baseGrad.addColorStop(0.3, col.fill);
                 baseGrad.addColorStop(1, col.dark);
-                ctx.fillStyle = baseGrad;
-                ctx.fill();
-                ctx.strokeStyle = col.dark;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                oCtx.fillStyle = baseGrad;
+                oCtx.fill();
+                oCtx.strokeStyle = col.dark;
+                oCtx.lineWidth = 1.5;
+                oCtx.stroke();
 
                 // 3. Body (narrow neck, flared bottom)
-                ctx.beginPath();
-                ctx.moveTo(sx - rad * 0.25, sy - rad * 0.1);
-                ctx.quadraticCurveTo(sx - rad * 0.3, sy + rad * 0.25, sx - rad * 0.65, sy + rad * 0.55);
-                ctx.lineTo(sx + rad * 0.65, sy + rad * 0.55);
-                ctx.quadraticCurveTo(sx + rad * 0.3, sy + rad * 0.25, sx + rad * 0.25, sy - rad * 0.1);
-                ctx.closePath();
-                const bodyGrad = ctx.createLinearGradient(sx - rad * 0.5, sy - rad * 0.1, sx + rad * 0.5, sy + rad * 0.55);
+                oCtx.beginPath();
+                oCtx.moveTo(sx - rad * 0.25, sy - rad * 0.1);
+                oCtx.quadraticCurveTo(sx - rad * 0.3, sy + rad * 0.25, sx - rad * 0.65, sy + rad * 0.55);
+                oCtx.lineTo(sx + rad * 0.65, sy + rad * 0.55);
+                oCtx.quadraticCurveTo(sx + rad * 0.3, sy + rad * 0.25, sx + rad * 0.25, sy - rad * 0.1);
+                oCtx.closePath();
+                const bodyGrad = oCtx.createLinearGradient(sx - rad * 0.5, sy - rad * 0.1, sx + rad * 0.5, sy + rad * 0.55);
                 bodyGrad.addColorStop(0, col.light);
                 bodyGrad.addColorStop(0.3, col.fill);
                 bodyGrad.addColorStop(1, col.dark);
-                ctx.fillStyle = bodyGrad;
-                ctx.fill();
-                ctx.strokeStyle = col.dark;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                oCtx.fillStyle = bodyGrad;
+                oCtx.fill();
+                oCtx.strokeStyle = col.dark;
+                oCtx.lineWidth = 1.5;
+                oCtx.stroke();
 
                 // 4. Collar (neck ring)
-                ctx.beginPath();
-                ctx.ellipse(sx, sy - rad * 0.1, rad * 0.3, rad * 0.08, 0, 0, Math.PI * 2);
-                const collarGrad = ctx.createLinearGradient(sx - rad * 0.3, sy - rad * 0.18, sx + rad * 0.3, sy - rad * 0.02);
+                oCtx.beginPath();
+                oCtx.ellipse(sx, sy - rad * 0.1, rad * 0.3, rad * 0.08, 0, 0, Math.PI * 2);
+                const collarGrad = oCtx.createLinearGradient(sx - rad * 0.3, sy - rad * 0.18, sx + rad * 0.3, sy - rad * 0.02);
                 collarGrad.addColorStop(0, col.light);
                 collarGrad.addColorStop(0.5, col.fill);
                 collarGrad.addColorStop(1, col.dark);
-                ctx.fillStyle = collarGrad;
-                ctx.fill();
-                ctx.strokeStyle = col.dark;
-                ctx.lineWidth = 1.2;
-                ctx.stroke();
+                oCtx.fillStyle = collarGrad;
+                oCtx.fill();
+                oCtx.strokeStyle = col.dark;
+                oCtx.lineWidth = 1.2;
+                oCtx.stroke();
 
                 // 5. Head (sphere)
-                ctx.beginPath();
-                ctx.arc(sx, sy - rad * 0.5, rad * 0.42, 0, Math.PI * 2);
+                oCtx.beginPath();
+                oCtx.arc(sx, sy - rad * 0.5, rad * 0.42, 0, Math.PI * 2);
                 // Radial gradient for glossy 3D head: highlight at top-left
-                const headGrad = ctx.createRadialGradient(
+                const headGrad = oCtx.createRadialGradient(
                     sx - rad * 0.15, sy - rad * 0.65, 0,
                     sx, sy - rad * 0.5, rad * 0.42
                 );
@@ -370,23 +386,29 @@ const LudoBoard = (() => {
                 headGrad.addColorStop(0.2, col.light);
                 headGrad.addColorStop(0.7, col.fill);
                 headGrad.addColorStop(1, col.dark);
-                ctx.fillStyle = headGrad;
-                ctx.fill();
-                ctx.strokeStyle = col.dark;
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
+                oCtx.fillStyle = headGrad;
+                oCtx.fill();
+                oCtx.strokeStyle = col.dark;
+                oCtx.lineWidth = 1.5;
+                oCtx.stroke();
 
                 // 6. Highlight Reflection (extra gloss 3D pop)
-                ctx.beginPath();
-                ctx.arc(sx - rad * 0.15, sy - rad * 0.65, rad * 0.08, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-                ctx.fill();
+                oCtx.beginPath();
+                oCtx.arc(sx - rad * 0.15, sy - rad * 0.65, rad * 0.08, 0, Math.PI * 2);
+                oCtx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                oCtx.fill();
 
                 hitboxes.push({ player: t.player, id: t.id, x: sx, y: sy, r: rad });
             });
         });
 
-        ctx.restore();
+        oCtx.restore();
+
+        // 3. Write operation: single atomic transfer from offscreen to onscreen canvas
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(offscreenCanvas, 0, 0);
+
         return hitboxes;
     }
 
