@@ -85,8 +85,8 @@ const LudoUI = (() => {
         container.querySelectorAll('.name-input-field').forEach(input => {
             if (input.dataset.color) {
                 const val = input.value.trim();
-                // Do not preserve CPU names as custom player names
-                if (val && !val.startsWith('Computer (')) {
+                // Do not preserve CPU names or custom Red placeholders
+                if (val && !val.startsWith('Computer (') && !val.startsWith('Your Name (')) {
                     savedNames[input.dataset.color] = val;
                 }
             }
@@ -95,9 +95,13 @@ const LudoUI = (() => {
         container.innerHTML = '';
 
         let activeColors = [];
-        if (playerCount === 2) activeColors = ['red', 'yellow'];
-        else if (playerCount === 3) activeColors = ['red', 'green', 'yellow'];
-        else activeColors = ['red', 'green', 'yellow', 'blue'];
+        if (gameMode === 'ai') {
+            activeColors = ['red'];
+        } else {
+            if (playerCount === 2) activeColors = ['red', 'yellow'];
+            else if (playerCount === 3) activeColors = ['red', 'green', 'yellow'];
+            else activeColors = ['red', 'green', 'yellow', 'blue'];
+        }
 
         activeColors.forEach((color, idx) => {
             const group = document.createElement('div');
@@ -116,25 +120,20 @@ const LudoUI = (() => {
             input.dataset.color = color;
             input.maxLength = 16;
 
-            const isCPU = (gameMode === 'ai' && color !== 'red');
-            if (isCPU) {
-                const cpuName = `Computer (${color.charAt(0).toUpperCase() + color.slice(1)})`;
-                input.value = cpuName;
-                input.placeholder = cpuName;
-                input.disabled = true;
-                input.style.color = '#747d8c';
-                input.style.cursor = 'not-allowed';
+            if (gameMode === 'ai' && color === 'red') {
+                input.placeholder = "Your Name (Player 1)";
             } else {
-                const defaultName = `Player ${idx + 1}`;
-                input.placeholder = defaultName;
-                input.disabled = false;
-                input.style.color = '';
-                input.style.cursor = '';
-                if (savedNames[color]) {
-                    input.value = savedNames[color];
-                } else {
-                    input.value = '';
-                }
+                input.placeholder = `Player ${idx + 1}`;
+            }
+
+            input.disabled = false;
+            input.style.color = '';
+            input.style.cursor = '';
+
+            if (savedNames[color]) {
+                input.value = savedNames[color];
+            } else {
+                input.value = '';
             }
 
             group.appendChild(indicator);
@@ -247,9 +246,28 @@ const LudoUI = (() => {
             startBtn.addEventListener('click', () => {
                 // Read names from inputs
                 const names = {};
-                document.querySelectorAll('.name-input-field').forEach(input => {
-                    const color = input.dataset.color;
-                    names[color] = input.value.trim() || input.placeholder || color;
+                let activeColors = [];
+                if (playerCount === 2) activeColors = ['red', 'yellow'];
+                else if (playerCount === 3) activeColors = ['red', 'green', 'yellow'];
+                else activeColors = ['red', 'green', 'yellow', 'blue'];
+
+                activeColors.forEach((color, idx) => {
+                    const input = document.querySelector(`.name-input-field[data-color="${color}"]`);
+                    if (input) {
+                        const val = input.value.trim();
+                        if (val) {
+                            names[color] = val;
+                        } else {
+                            names[color] = color === 'red' ? 'Player 1' : `Player ${idx + 1}`;
+                        }
+                    } else {
+                        // Input not in DOM (implies Green/Yellow/Blue CPU in VS Computer mode)
+                        if (gameMode === 'ai' && color !== 'red') {
+                            names[color] = `Computer (${color.charAt(0).toUpperCase() + color.slice(1)})`;
+                        } else {
+                            names[color] = `Player ${idx + 1}`;
+                        }
+                    }
                 });
 
                 // Unlock AudioContext on first user gesture

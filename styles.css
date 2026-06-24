@@ -1135,6 +1135,8 @@ body.theater-mode .board-wrapper {
     gap: 12px;
     margin-top: 12px;
     text-align: left;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .name-input-group {
@@ -1146,6 +1148,8 @@ body.theater-mode .board-wrapper {
     border-radius: var(--border-radius-md);
     border: 3px solid var(--neutral-dark);
     box-shadow: 0 3px 0px var(--neutral-dark);
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .name-input-color-indicator {
@@ -1171,6 +1175,7 @@ body.theater-mode .board-wrapper {
 
 .name-input-field {
     flex: 1;
+    min-width: 0;
     border: none;
     outline: none;
     font-family: var(--font-body);
@@ -1178,6 +1183,22 @@ body.theater-mode .board-wrapper {
     font-weight: 600;
     color: var(--neutral-dark);
     background: transparent;
+    text-overflow: ellipsis;
+}
+
+/* Mobile responsive overrides for Name Inputs */
+@media (max-width: 600px) {
+    .name-input-field {
+        font-size: 14px;
+    }
+    .name-input-group {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    .name-input-label {
+        font-size: 13px;
+        width: 50px;
+    }
 }
 
 .scoreboard-grid {
