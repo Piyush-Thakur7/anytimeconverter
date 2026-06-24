@@ -84,7 +84,11 @@ const LudoUI = (() => {
         const savedNames = {};
         container.querySelectorAll('.name-input-field').forEach(input => {
             if (input.dataset.color) {
-                savedNames[input.dataset.color] = input.value.trim();
+                const val = input.value.trim();
+                // Do not preserve CPU names as custom player names
+                if (val && !val.startsWith('Computer (')) {
+                    savedNames[input.dataset.color] = val;
+                }
             }
         });
 
@@ -114,14 +118,23 @@ const LudoUI = (() => {
 
             const isCPU = (gameMode === 'ai' && color !== 'red');
             if (isCPU) {
-                input.value = `Computer (${color.charAt(0).toUpperCase() + color.slice(1)})`;
+                const cpuName = `Computer (${color.charAt(0).toUpperCase() + color.slice(1)})`;
+                input.value = cpuName;
+                input.placeholder = cpuName;
                 input.disabled = true;
                 input.style.color = '#747d8c';
                 input.style.cursor = 'not-allowed';
             } else {
                 const defaultName = `Player ${idx + 1}`;
-                input.value = savedNames[color] || (color === 'red' ? 'Player 1' : defaultName);
                 input.placeholder = defaultName;
+                input.disabled = false;
+                input.style.color = '';
+                input.style.cursor = '';
+                if (savedNames[color]) {
+                    input.value = savedNames[color];
+                } else {
+                    input.value = '';
+                }
             }
 
             group.appendChild(indicator);
