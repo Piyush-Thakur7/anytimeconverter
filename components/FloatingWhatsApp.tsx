@@ -22,6 +22,7 @@ export default function FloatingWhatsApp() {
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
+  // TODO: Replace with real phone number and WhatsApp link before launch
   const phoneNumber = "919876543210"; // Placeholder number, user can configure
   const message = encodeURIComponent("Hi! I'm interested in joining Anytime Fitness Sikandrabad. Can you please share membership details and free trial info?");
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;

@@ -141,7 +141,7 @@ export default function GymHomePage() {
     },
     {
       id: 4,
-      src: "https://images.unsplash.com/photo-1605296867304-46d5465a25f1?q=80&w=800&auto=format&fit=crop",
+      src: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800&auto=format&fit=crop",
       alt: "Power Rack and gym equipment",
       caption: "Full range of premium squat racks and barbells"
     },
@@ -163,7 +163,7 @@ export default function GymHomePage() {
   const pricingPlans: PricingPlan[] = [
     {
       name: "Monthly",
-      price: "₹600 / ₹800",
+      price: "₹800",
       period: "Month",
       tagline: "Flexible Access",
       popular: false,
@@ -207,24 +207,24 @@ export default function GymHomePage() {
   // Testimonials Data
   const testimonials: Testimonial[] = [
     {
-      name: "Rohit Sharma",
-      role: "Member since 2024 (Lost 18kg)",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=150&auto=format&fit=crop",
-      quote: "Anytime Fitness Sikandrabad literally changed my life. The trainers are incredibly supportive and the atmosphere is intensely motivational. I followed the 12-week transformation plan and shed 18kg, while gaining solid muscle.",
+      name: "Member Since 2024",
+      role: "Strength & Conditioning",
+      image: "",
+      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
       rating: 5
     },
     {
-      name: "Pooja Chaudhary",
-      role: "Powerlifter & Member",
-      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop",
-      quote: "The equipment here is top-tier. Unlike other gyms in Bulandshahr, they have premium squat cages, bumper plates, and a designated deadlift zone. It's clean, safe for women, and the training hours are extremely convenient.",
+      name: "Member Since 2024",
+      role: "Cardio & Fitness",
+      image: "",
+      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
       rating: 5
     },
     {
-      name: "Amit Yadav",
-      role: "Member since 2025",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop",
-      quote: "Best gym experience in Sikandrabad! The pricing is extremely transparent and highly valuable. The community of members feels like a family where everyone pushes you to lift heavier and train harder.",
+      name: "Member Since 2025",
+      role: "Strength & Cardio",
+      image: "",
+      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
       rating: 5
     }
   ];
@@ -603,10 +603,20 @@ export default function GymHomePage() {
                   <h3 className="font-bebas text-3xl text-white font-bold tracking-wide mt-2">{plan.name} Plan</h3>
                   
                   {/* Price display */}
-                  <div className="mt-6 flex items-baseline">
-                    <span className="font-bebas text-6xl text-white font-bold leading-none">{plan.price}</span>
-                    <span className="text-neutral-500 text-sm ml-2 font-semibold">/ {plan.period}</span>
-                  </div>
+                  {plan.name === "Monthly" ? (
+                    <div className="mt-6">
+                      <div className="flex items-baseline">
+                        <span className="font-bebas text-6xl text-white font-bold leading-none">₹800</span>
+                        <span className="text-neutral-500 text-sm ml-2 font-semibold">/ Month</span>
+                      </div>
+                      <p className="text-sm text-neutral-500 mt-2 font-sans font-medium">Strength Training Only: ₹600/Month</p>
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex items-baseline">
+                      <span className="font-bebas text-6xl text-white font-bold leading-none">{plan.price}</span>
+                      <span className="text-neutral-500 text-sm ml-2 font-semibold">/ {plan.period}</span>
+                    </div>
+                  )}
 
                   <div className="w-full h-[1px] bg-neutral-900 my-8"></div>
 
@@ -659,7 +669,10 @@ export default function GymHomePage() {
             </h2>
             <div className="w-16 h-1 bg-accent mx-auto"></div>
             <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Listen to the honest transformation reviews from members training everyday at Anytime Fitness Sikandrabad.
+              Listen to the honest reviews from members training everyday at Anytime Fitness Sikandrabad.
+            </p>
+            <p className="text-xs text-neutral-500 font-sans max-w-xl mx-auto italic mt-2">
+              Sample testimonials shown — will be updated with real member reviews
             </p>
           </div>
 
@@ -694,12 +707,20 @@ export default function GymHomePage() {
 
                 {/* Profile Details */}
                 <div className="flex items-center space-x-4 mt-8 border-t border-neutral-900 pt-6">
-                  <img 
-                    src={test.image} 
-                    alt={test.name}
-                    className="w-12 h-12 rounded-full object-cover border border-neutral-800"
-                    loading="lazy"
-                  />
+                  {test.image ? (
+                    <img 
+                      src={test.image} 
+                      alt={test.name}
+                      className="w-12 h-12 rounded-full object-cover border border-neutral-800"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500">
+                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
                   <div>
                     <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">{test.name}</h4>
                     <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">{test.role}</p>
@@ -848,18 +869,20 @@ export default function GymHomePage() {
                   <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">Gym Location</h4>
                   <p className="text-sm text-neutral-400 leading-relaxed font-sans">
                     Anytime Fitness Sikandrabad, <br />
-                    GT Road, Near City Center, <br />
+                    Sirodhan Road, <br />
                     Sikandrabad, Bulandshahr, <br />
-                    Uttar Pradesh - 203205
+                    Uttar Pradesh
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">Call / WhatsApp</h4>
+                    {/* TODO: Replace with real phone number and WhatsApp link before launch */}
                     <p className="text-sm text-neutral-400 font-sans">+91 98765 43210</p>
                   </div>
                   <div>
+                    {/* TODO: Replace with real phone number and WhatsApp link before launch */}
                     <a
                       href="https://wa.me/919876543210?text=Hi!%20I%20am%20interested%20in%20joining%20Anytime%20Fitness%20Sikandrabad"
                       target="_blank"
