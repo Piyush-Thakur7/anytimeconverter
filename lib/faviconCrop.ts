@@ -81,7 +81,7 @@ export function cropAndSetFavicon(imageSrc: string) {
         0, 0, 128, 128
       );
 
-      // Remove the white background from the cropped favicon
+      // Remove the white background from the cropped favicon and convert dark elements to white
       const favImageData = favCtx.getImageData(0, 0, 128, 128);
       const favData = favImageData.data;
       for (let i = 0; i < favData.length; i += 4) {
@@ -90,6 +90,15 @@ export function cropAndSetFavicon(imageSrc: string) {
         const b = favData[i + 2];
         if (r > 235 && g > 235 && b > 235) {
           favData[i + 3] = 0; // Transparent
+        } else {
+          // Convert dark elements (like the black T and dumbbells) to white for dark tabs
+          const isRed = (r > g + 40) && (r > b + 40);
+          const isDark = (r < 135 && g < 135 && b < 135);
+          if (!isRed && isDark) {
+            favData[i] = 255;
+            favData[i + 1] = 255;
+            favData[i + 2] = 255;
+          }
         }
       }
       favCtx.putImageData(favImageData, 0, 0);

@@ -109,15 +109,6 @@ export default function GymHomePage() {
       )
     },
     {
-      title: "Zumba Dance",
-      description: "Ditch the workout and join the party. Burn fat and boost cardiovascular health with high-energy dance routines set to latin beats.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-        </svg>
-      )
-    },
-    {
       title: "Transformation Program",
       description: "Our flagship 12-week body re-composition system featuring custom meal plans, body scans, and weekly progress reviews.",
       icon: (
@@ -172,45 +163,43 @@ export default function GymHomePage() {
   const pricingPlans: PricingPlan[] = [
     {
       name: "Monthly",
-      price: "₹1,499",
+      price: "₹600 / ₹800",
       period: "Month",
-      tagline: "Build The Habit",
+      tagline: "Flexible Access",
       popular: false,
       features: [
-        "Access during operating hours",
-        "Free baseline body assessment",
-        "Standard machine guidance",
-        "Locker and shower access",
-        "Free Wi-Fi access"
-      ]
-    },
-    {
-      name: "Quarterly",
-      price: "₹3,999",
-      period: "3 Months",
-      tagline: "Unleash The Drive",
-      popular: false,
-      features: [
-        "Full 24/7 keyfob gym access",
-        "1x Fitness & posture assessment",
-        "3x Personal training sessions",
-        "Customized workout template",
+        "₹600/month: Strength Training Access only",
+        "₹800/month: Strength + Cardio & Treadmill Access",
+        "Access during all opening hours",
+        "Free baseline fitness guidance",
         "Locker and shower access"
       ]
     },
     {
+      name: "Quarterly",
+      price: "₹2,000",
+      period: "3 Months",
+      tagline: "Unleash The Drive",
+      popular: false,
+      features: [
+        "Full gym access (Strength & Cardio/Treadmills)",
+        "Customized workout plan template",
+        "Locker and shower access",
+        "Saves ₹400 over monthly premium access"
+      ]
+    },
+    {
       name: "Annual",
-      price: "₹11,999",
+      price: "₹5,500",
       period: "Year",
       tagline: "Ultimate Transformation",
       popular: true,
       features: [
-        "Full 24/7 keyfob gym access",
-        "Unlimited fitness assessments",
-        "Complete personalized nutrition blueprint",
-        "Monthly transformation progress reviews",
-        "10% discount on in-gym supplements",
-        "Priority registration for group classes"
+        "Full gym access (Strength & Cardio/Treadmills)",
+        "Priority guidance from gym trainers",
+        "Customized workout and nutrition blueprint",
+        "Free progress checkups & body scans",
+        "Best value: Less than ₹460/month"
       ]
     }
   ];
@@ -228,7 +217,7 @@ export default function GymHomePage() {
       name: "Pooja Chaudhary",
       role: "Powerlifter & Member",
       image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop",
-      quote: "The equipment here is top-tier. Unlike other gyms in Bulandshahr, they have premium squat cages, bumper plates, and a designated deadlift zone. It's clean, safe for women, and the 24/7 access is a total game changer.",
+      quote: "The equipment here is top-tier. Unlike other gyms in Bulandshahr, they have premium squat cages, bumper plates, and a designated deadlift zone. It's clean, safe for women, and the training hours are extremely convenient.",
       rating: 5
     },
     {
@@ -306,8 +295,8 @@ export default function GymHomePage() {
                   <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Rated Reviews</p>
                 </div>
                 <div className="border-x border-neutral-900">
-                  <p className="text-white font-bebas text-2xl sm:text-3xl tracking-wider font-bold">24/7 OPEN</p>
-                  <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Access for Members</p>
+                  <p className="text-white font-bebas text-2xl sm:text-3xl tracking-wider font-bold">EXPERT COACHES</p>
+                  <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Certified Team</p>
                 </div>
                 <div>
                   <p className="text-white font-bebas text-2xl sm:text-3xl tracking-wider font-bold">SIKANDRABAD</p>
@@ -370,7 +359,7 @@ export default function GymHomePage() {
               </p>
 
               <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
-                With secure 24-hour keyfob access, elite-level strength and conditioning equipment, and a team of certified personal trainers, we remove every barrier between you and your goals. Whether you want to shed weight, gain strength, or build a disciplined lifestyle, your journey begins here.
+                With our elite-level strength and conditioning equipment, spacious layout, and a team of certified personal trainers, we remove every barrier between you and your goals. Whether you want to shed weight, gain strength, or build a disciplined lifestyle, your journey begins here.
               </p>
 
               {/* Icon Stats Grid */}
@@ -382,7 +371,7 @@ export default function GymHomePage() {
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">1500+</h4>
+                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">250+</h4>
                     <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Members Trained</p>
                   </div>
                 </div>
@@ -414,12 +403,12 @@ export default function GymHomePage() {
                 <div className="flex items-start space-x-3">
                   <div className="p-2 bg-neutral-900 border border-neutral-800 text-accent">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">24 Hours</h4>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Secure Key Access</p>
+                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">Spacious</h4>
+                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Workout Space</p>
                   </div>
                 </div>
               </div>
@@ -765,7 +754,7 @@ export default function GymHomePage() {
             </h2>
             <div className="w-16 h-1 bg-accent mx-auto"></div>
             <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Submit your details to activate your 1-day free trial keyfob. Our team will contact you within 24 hours.
+              Submit your details to activate your 1-day free gym trial pass. Our team will contact you shortly.
             </p>
           </div>
 

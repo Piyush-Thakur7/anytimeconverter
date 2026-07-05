@@ -20,20 +20,18 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad, Bulandshahr",
-  description: "Your Transformation Starts Here. Anytime Fitness Sikandrabad is a high-end, 24/7 access gym equipped with premium strength training and cardio machinery, certified personal trainers, group classes, and customized transformation programs.",
+  description: "Your Transformation Starts Here. Anytime Fitness Sikandrabad is a high-end gym equipped with premium strength training and cardio machinery, certified personal trainers, and customized transformation programs.",
   keywords: [
     "Anytime Fitness Sikandrabad", 
     "Best gym in Sikandrabad", 
     "Gyms in Sikandrabad", 
     "Bulandshahr fitness center", 
-    "24/7 gym Sikandrabad",
     "Personal training Sikandrabad",
-    "Zumba classes Sikandrabad",
     "Weight loss program Sikandrabad"
   ],
   openGraph: {
     title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad",
-    description: "Your Transformation Starts Here. Train hard, stay strong with 24/7 access, elite equipment, and expert trainers.",
+    description: "Your Transformation Starts Here. Train hard, stay strong with elite equipment and expert trainers.",
     type: "website",
     locale: "en_IN",
   },

@@ -1,6 +1,7 @@
 /**
- * Utility to remove white or near-white backgrounds from images using HTML5 Canvas.
- * Converts pixels with RGB values greater than the threshold (default 235) to transparent.
+ * Utility to remove white or near-white backgrounds from images using HTML5 Canvas
+ * AND convert dark elements (like black text, dark "T", and dark dumbbells) to white
+ * so they are clearly visible on a dark website theme.
  */
 export function removeWhiteBackground(imageSrc: string, callback: (dataUrl: string) => void, threshold = 235) {
   if (typeof window === 'undefined') return;
@@ -31,9 +32,20 @@ export function removeWhiteBackground(imageSrc: string, callback: (dataUrl: stri
         const g = data[i + 1];
         const b = data[i + 2];
 
-        // If the pixel is close to white, make it transparent
+        // 1. If the pixel is close to white, make it transparent
         if (r > threshold && g > threshold && b > threshold) {
           data[i + 3] = 0; // Alpha = 0
+        } else {
+          // 2. Convert black/dark gray components to white for high contrast on dark themes.
+          // Detect red so we don't accidentally convert the red "A" and muscular arm.
+          const isRed = (r > g + 40) && (r > b + 40);
+          const isDark = (r < 135 && g < 135 && b < 135);
+
+          if (!isRed && isDark) {
+            data[i] = 255;     // Red
+            data[i + 1] = 255; // Green
+            data[i + 2] = 255; // Blue
+          }
         }
       }
 
@@ -41,7 +53,7 @@ export function removeWhiteBackground(imageSrc: string, callback: (dataUrl: stri
       callback(canvas.toDataURL("image/png"));
     } catch (e) {
       console.error("Error removing background from image:", e);
-      callback(imageSrc); // Fallback to original image if security/CORS issue
+      callback(imageSrc); // Fallback to original image
     }
   };
 

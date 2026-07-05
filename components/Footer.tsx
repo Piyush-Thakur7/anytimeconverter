@@ -107,16 +107,12 @@ export default function Footer() {
                 <span>Monday - Saturday:</span>
                 <span className="text-white font-medium">05:00 AM - 10:00 PM</span>
               </li>
-              <li className="flex justify-between border-b border-neutral-900 pb-1">
+              <li className="flex justify-between">
                 <span>Sunday:</span>
                 <span className="text-accent font-medium">Closed</span>
               </li>
-              <li className="flex justify-between">
-                <span>Access:</span>
-                <span className="text-white font-medium">24/7 Keyfob Access</span>
-              </li>
               <li className="pt-2 text-xs text-neutral-500">
-                * Note: Trainer-assisted hours vary. Keyfob access allows 24-hour training for premium members.
+                * Note: Gym is fully closed on Sundays. Please inquire at the desk for personal training session booking slots.
               </li>
             </ul>
           </div>
