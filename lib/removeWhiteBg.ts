@@ -7,7 +7,6 @@ export function removeWhiteBackground(imageSrc: string, callback: (dataUrl: stri
   if (typeof window === 'undefined') return;
 
   const img = new Image();
-  img.crossOrigin = "anonymous";
   img.src = imageSrc;
 
   img.onload = () => {

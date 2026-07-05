@@ -125,7 +125,7 @@ export default function Footer() {
             <a href="#privacy" className="hover:underline hover:text-white transition-colors">Privacy Policy</a>
             <a href="#terms" className="hover:underline hover:text-white transition-colors">Terms of Service</a>
             <span className="text-neutral-700">|</span>
-            <span className="text-neutral-600">Designed by Antigravity</span>
+            <span className="text-neutral-600">Designed by Resence</span>
           </div>
         </div>
       </div>

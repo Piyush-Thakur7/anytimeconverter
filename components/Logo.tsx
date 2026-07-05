@@ -27,14 +27,18 @@ export default function Logo({ className = "h-14 w-auto", isFooter = false }: Lo
   }, [isFooter]);
 
   return (
-    <div className={`relative flex items-center select-none ${isLoading ? 'animate-pulse' : ''}`}>
-      {/* If loading, we show a loading fallback or render the raw image with blending/containment */}
+    <div className="relative flex items-center select-none">
       <img
         src={logoSrc}
         alt="Anytime Fitness Sikandrabad"
         className={`${className} object-contain transition-opacity duration-300`}
-        style={{ opacity: isLoading ? 0.3 : 1 }}
+        style={{ opacity: isLoading ? 0 : 1 }}
       />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     </div>
   );
 }

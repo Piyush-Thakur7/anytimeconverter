@@ -6,7 +6,6 @@ export function cropAndSetFavicon(imageSrc: string) {
   if (typeof window === 'undefined') return;
 
   const img = new Image();
-  img.crossOrigin = "anonymous";
   img.src = imageSrc;
 
   img.onload = () => {
