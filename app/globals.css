@@ -1,129 +1,155 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-border: #e2e8f0;
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+  --card: #121212;
+  --card-border: #222222;
+  --accent: #e11d2e;
+  --accent-glow: rgba(225, 29, 46, 0.15);
   
-  --primary-glow: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.05) 50%, transparent 100%);
+  --font-bebas-neue: var(--font-bebas-neue);
+  --font-inter: var(--font-inter);
 }
 
-.dark {
-  --background: #040712; /* Deep space slate */
-  --foreground: #f8fafc;
-  --card: #090e1a;
-  --card-border: #131b2e;
-  
-  --primary-glow: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, rgba(236, 72, 153, 0.08) 50%, transparent 100%);
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-border: var(--card-border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  
+  --font-bebas: var(--font-bebas-neue), sans-serif;
+  --font-sans: var(--font-inter), sans-serif;
+  
+  --animate-fade-up: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-fade-in: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-slide-in: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-scale-up: scaleUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: #0a0a0a;
+  color: #ffffff;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  position: relative;
+  font-family: var(--font-inter), sans-serif;
   overflow-x: hidden;
 }
 
-/* Background Cyber Grid Pattern */
-.cyber-grid {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
-.dark .cyber-grid {
-  background-image: 
-    linear-gradient(to right, rgba(30, 41, 59, 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 41, 59, 0.4) 1px, transparent 1px);
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
 }
-
-/* Glowing Neon Background Blobs */
-.neon-glow-blob {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  background: var(--primary-glow);
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 50%;
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e11d2e;
 }
 
-/* Premium Gaming Cards with Glassmorphism */
-.gaming-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(148, 163, 184, 0.12);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Bounding box styles for cinematic overlays */
+.cinematic-overlay {
+  background: linear-gradient(to top, rgba(10, 10, 10, 1) 0%, rgba(10, 10, 10, 0.4) 60%, rgba(10, 10, 10, 0.2) 100%);
 }
 
-.dark .gaming-card {
-  background: rgba(9, 14, 26, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(19, 27, 46, 0.8);
-  box-shadow: 0 4px 30px -4px rgba(0, 0, 0, 0.4);
+.cinematic-overlay-bottom {
+  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.8) 0%, rgba(10, 10, 10, 1) 100%);
 }
 
-/* Neon Borders & Glow on Hover */
-.neon-hover-purple:hover {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
-  transform: translateY(-2px);
+/* Premium card animations & glow effects */
+.gym-card {
+  background: #121212;
+  border: 1px solid #1f1f1f;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.neon-hover-orange:hover {
-  border-color: rgba(249, 115, 22, 0.6);
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.25);
-  transform: translateY(-2px);
+.gym-card:hover {
+  border-color: #e11d2e;
+  box-shadow: 0 0 25px rgba(225, 29, 46, 0.15);
+  transform: translateY(-4px);
 }
 
-.neon-hover-gold:hover {
-  border-color: rgba(245, 158, 11, 0.6);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
-  transform: translateY(-2px);
+/* Red glow effect on hover for special sections */
+.red-glow-hover {
+  transition: all 0.3s ease;
+}
+.red-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(225, 29, 46, 0.3);
 }
 
-/* Animations */
+/* Section scroll entry animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8)); }
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.animate-pulseGlow {
-  animation: pulseGlow 2s infinite ease-in-out;
+.animate-fade-up {
+  animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom scrollbar hides */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.animate-fade-in {
+  animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Circular Character Counter Ring Styles */
-.circular-progress {
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
+/* Text clipping/stroke styling */
+.text-stroke-white {
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+  color: transparent;
+}
+
+.text-stroke-accent {
+  -webkit-text-stroke: 1px rgba(225, 29, 46, 0.5);
+  color: transparent;
+}
+
+/* Lightbox styles */
+.lightbox-backdrop {
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.9);
 }

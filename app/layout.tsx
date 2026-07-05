@@ -1,24 +1,42 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bebas_Neue, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const bebasNeue = Bebas_Neue({
+  weight: "400",
+  variable: "--font-bebas-neue",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "StyleName — Fancy Names & Fonts for Free Fire, BGMI & More",
-  description: "Convert plain text into stylish Unicode text and copy invisible characters for gaming nicknames. Generate cool fonts for Free Fire, BGMI, and PUBG.",
-  keywords: ["fancy text generator", "invisible character", "free fire nickname", "bgmi stylish name", "unicode fonts"],
-  metadataBase: new URL("https://stylename.resence.in"),
+  title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad, Bulandshahr",
+  description: "Your Transformation Starts Here. Anytime Fitness Sikandrabad is a high-end, 24/7 access gym equipped with premium strength training and cardio machinery, certified personal trainers, group classes, and customized transformation programs.",
+  keywords: [
+    "Anytime Fitness Sikandrabad", 
+    "Best gym in Sikandrabad", 
+    "Gyms in Sikandrabad", 
+    "Bulandshahr fitness center", 
+    "24/7 gym Sikandrabad",
+    "Personal training Sikandrabad",
+    "Zumba classes Sikandrabad",
+    "Weight loss program Sikandrabad"
+  ],
+  openGraph: {
+    title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad",
+    description: "Your Transformation Starts Here. Train hard, stay strong with 24/7 access, elite equipment, and expert trainers.",
+    type: "website",
+    locale: "en_IN",
+  },
 };
 
 export default function RootLayout({
@@ -29,18 +47,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${bebasNeue.variable} ${inter.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100 cyber-grid relative">
-        {/* Ambient Neon Glows */}
-        <div className="neon-glow-blob top-[-150px] left-[-150px] opacity-60 dark:opacity-100" />
-        <div className="neon-glow-blob top-[40%] right-[-150px] opacity-40 dark:opacity-60" />
-        
+      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-white">
         <Navbar />
-        <main className="flex-grow flex flex-col justify-start relative z-10">
+        <main className="flex-grow">
           {children}
         </main>
         <Footer />
+        <FloatingWhatsApp />
       </body>
     </html>
   );

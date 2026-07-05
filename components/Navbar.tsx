@@ -1,133 +1,138 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+
 import Logo from './Logo';
 
 export default function Navbar() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Initialize theme on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    const initialTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
-    setTheme(initialTheme);
-    
-    if (initialTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    localStorage.setItem('theme', nextTheme);
+  const navLinks = [
+    { name: 'Home', href: '#home' },
+    { name: 'Programs', href: '#programs' },
+    { name: 'Gallery', href: '#gallery' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Contact', href: '#contact' },
+  ];
+
+  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setIsMobileMenuOpen(false);
     
-    if (nextTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const targetElement = document.querySelector(href);
+    if (targetElement) {
+      const offset = 80; // height of the navbar
+      const elementPosition = targetElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: '🔥 Free Fire Names', href: '/free-fire-name-generator' },
-    { name: '🎯 BGMI Names', href: '/bgmi-name-generator' },
-    { name: '👻 Invisible Text', href: '/invisible-text' },
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 bg-white/80 backdrop-blur-md transition-all dark:border-slate-800/80 dark:bg-slate-950/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-2.5 sm:px-6 lg:px-8">
-        {/* Logo Wordmark */}
-        <Link href="/">
-          <Logo />
-        </Link>
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out border-b ${
+        isScrolled 
+          ? 'bg-[#0a0a0a]/95 backdrop-blur-md py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-neutral-900' 
+          : 'bg-transparent py-5 border-transparent'
+      }`}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        {/* Logo Text & Image */}
+        <a href="#home" onClick={(e) => handleScrollTo(e, '#home')} className="flex items-center space-x-2">
+          <Logo className="h-10 sm:h-12 md:h-14 w-auto" />
+          <span className="font-bebas text-xl sm:text-2xl tracking-widest text-white font-bold hover:text-accent transition-colors">
+            ANYTIME FITNESS
+          </span>
+        </a>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-semibold transition-all hover:text-violet-600 dark:hover:text-violet-400 ${
-                  isActive
-                    ? 'text-violet-600 dark:text-violet-400 font-bold'
-                    : 'text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                {link.name}
-              </Link>
-            );
-          })}
+          {navLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.href}
+              onClick={(e) => handleScrollTo(e, link.href)}
+              className="text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+            >
+              {link.name}
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+            </a>
+          ))}
         </nav>
 
-        {/* Action Controls */}
-        <div className="flex items-center space-x-1.5 sm:space-x-4">
-          {/* Light/Dark Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="rounded-full p-2.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900 transition-all focus:outline-none"
-            aria-label="Toggle Theme"
+        {/* Action Button */}
+        <div className="hidden md:block">
+          <a
+            href="#contact"
+            onClick={(e) => handleScrollTo(e, '#contact')}
+            className="bg-accent hover:bg-red-700 text-white font-bebas text-lg px-6 py-2 rounded-none tracking-widest uppercase transition-all duration-300 red-glow-hover transform hover:-translate-y-0.5"
           >
-            {theme === 'light' ? (
-              <svg className="h-5 w-5 fill-current" viewBox="0 0 20 20">
-                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-              </svg>
-            ) : (
-              <svg className="h-5 w-5 fill-current" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.46 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z" clipRule="evenodd" />
-              </svg>
-            )}
-          </button>
+            Join Now
+          </a>
+        </div>
 
-          {/* Mobile Menu Toggle */}
+        {/* Mobile Hamburger menu */}
+        <div className="flex md:hidden items-center">
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900 transition-all focus:outline-none"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-white hover:text-accent transition-colors focus:outline-none"
             aria-label="Toggle Menu"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {isOpen ? (
+            {isMobileMenuOpen ? (
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              ) : (
+              </svg>
+            ) : (
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
+              </svg>
+            )}
           </button>
         </div>
       </div>
 
       {/* Mobile Menu Panel */}
-      {isOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-2 dark:border-slate-800 dark:bg-slate-950 transition-all animate-fadeIn">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-[#0a0a0a] border-t border-neutral-900 py-4 px-6 space-y-4 shadow-xl">
+          <nav className="flex flex-col space-y-4">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
                 href={link.href}
-                onClick={() => setIsOpen(false)}
-                className={`block rounded-lg px-3 py-2 text-base font-semibold transition-all hover:bg-slate-50 dark:hover:bg-slate-900 ${
-                  isActive
-                    ? 'text-violet-600 dark:text-violet-400 bg-violet-50/50 dark:bg-violet-950/20'
-                    : 'text-slate-700 dark:text-slate-300'
-                }`}
+                onClick={(e) => handleScrollTo(e, link.href)}
+                className="text-base font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
               >
                 {link.name}
-              </Link>
-            );
-          })}
+              </a>
+            ))}
+          </nav>
+          <div className="pt-4 border-t border-neutral-950">
+            <a
+              href="#contact"
+              onClick={(e) => handleScrollTo(e, '#contact')}
+              className="block text-center bg-accent hover:bg-red-700 text-white font-bebas text-lg py-3 tracking-widest uppercase transition-all"
+            >
+              Join Now
+            </a>
+          </div>
         </div>
       )}
     </header>
