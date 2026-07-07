@@ -50,7 +50,7 @@ export default function PrivacyPage() {
             Because we do not require accounts, signups, or file uploads, we collect no personally identifiable information (PII). We do not collect or view your document contents, file names, or file sizes.
           </p>
           <p>
-            We may use minimal, privacy-respecting website analytics tools (such as Plausible Analytics) to monitor anonymous website traffic parameters (like total page views and general referral paths). This helps us understand utility usage patterns and does not track you across the web.
+            We use Google Analytics 4 (GA4) to monitor anonymous website traffic parameters (such as page views, general geographic location, device/browser types, and referral paths). This helps us understand utility usage patterns and improve website performance. This tracking is aggregated and collects no personal identifiers. <strong>Importantly, Google Analytics never has access to, nor does it collect or transmit, any of your uploaded files, document contents, or filenames. All document conversions happen entirely client-side inside your browser memory sandbox.</strong>
           </p>
         </section>
 
