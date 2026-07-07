@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import ToolLayout from '@/components/ToolLayout';
 import { addHistoryItem } from '@/lib/history';
+import { pdfToImages } from '@/lib/converterCore';
+import { createWorker } from 'tesseract.js';
 
 let pdfjsLib: any = null;
 if (typeof window !== 'undefined') {
@@ -20,12 +22,14 @@ export default function PdfToTextClient() {
   const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
   const [downloadName, setDownloadName] = useState('');
   const [copied, setCopied] = useState(false);
+  const [showOcrPrompt, setShowOcrPrompt] = useState(false);
 
   const handleFilesSelected = (filesList: File[]) => {
     setErrorMsg('');
     setSuccess(false);
     setDownloadBlob(null);
     setExtractedText('');
+    setShowOcrPrompt(false);
 
     const pdfFiles = filesList.filter(file => file.name.toLowerCase().endsWith('.pdf'));
     if (pdfFiles.length === 0) {
@@ -45,6 +49,7 @@ export default function PdfToTextClient() {
     setDownloadName('');
     setProgress(0);
     setCopied(false);
+    setShowOcrPrompt(false);
   };
 
   const handleConvert = async () => {
@@ -62,6 +67,7 @@ export default function PdfToTextClient() {
     setProgress(20);
     setErrorMsg('');
     setExtractedText('');
+    setShowOcrPrompt(false);
 
     try {
       const arrayBuffer = await uploadedFiles[0].arrayBuffer();
@@ -72,22 +78,30 @@ export default function PdfToTextClient() {
       
       let fullText = '';
       const numPages = pdf.numPages;
+      let actualContentFound = false;
 
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
         
-        // Group items that are on similar vertical positions or just join with space
         const pageText = textContent.items
           .map((item: any) => item.str)
           .join(' ');
+          
+        if (pageText.trim().length > 0) {
+          actualContentFound = true;
+        }
           
         fullText += `[Page ${pageNum}]\n${pageText}\n\n`;
         setProgress(Math.round(40 + (pageNum / numPages) * 50));
       }
 
-      if (!fullText.trim()) {
-        throw new Error('Could not extract any text from this PDF file (it might be scanned/image-only).');
+      if (!actualContentFound) {
+        setShowOcrPrompt(true);
+        throw new Error(
+          'This PDF appears to be a scanned image or photo with no selectable text. ' +
+          'Text extraction only works on PDFs with real embedded text (not scanned documents).'
+        );
       }
 
       setExtractedText(fullText);
@@ -107,6 +121,65 @@ export default function PdfToTextClient() {
     }
   };
 
+  const handleRunOcr = async () => {
+    if (uploadedFiles.length === 0) return;
+    
+    setIsProcessing(true);
+    setProgress(10);
+    setErrorMsg('');
+    setExtractedText('');
+    setShowOcrPrompt(false);
+
+    try {
+      // Step 1: Render PDF pages to images
+      const images = await pdfToImages(uploadedFiles[0]);
+      setProgress(25);
+
+      if (images.length === 0) {
+        throw new Error('Failed to render PDF pages into images.');
+      }
+
+      // Step 2: Initialize Tesseract.js Worker locally
+      const worker = await createWorker('eng', 1, {
+        workerPath: '/assets/tesseract/worker.min.js',
+        langPath: '/assets/tesseract',
+        corePath: '/assets/tesseract/',
+      });
+
+      setProgress(40);
+      let ocrText = '';
+      const numPages = images.length;
+
+      // Step 3: Run OCR page-by-page
+      for (let i = 0; i < numPages; i++) {
+        const { data: { text } } = await worker.recognize(images[i].dataUrl);
+        ocrText += `[Page ${i + 1} - OCR Extracted]\n${text}\n\n`;
+        setProgress(Math.round(40 + ((i + 1) / numPages) * 55));
+      }
+
+      await worker.terminate();
+
+      if (!ocrText.trim()) {
+        throw new Error('OCR completed but failed to extract any readable characters.');
+      }
+
+      setExtractedText(ocrText);
+      const textBlob = new Blob([ocrText], { type: 'text/plain;charset=utf-8' });
+      const outName = `${uploadedFiles[0].name.replace(/\.[^/.]+$/, '')}_ocr_extracted.txt`;
+
+      setProgress(100);
+      setDownloadBlob(textBlob);
+      setDownloadName(outName);
+      setSuccess(true);
+      addHistoryItem(outName, 'PDF to Text (OCR)');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'An error occurred during OCR text extraction.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleDownload = () => {
     if (!downloadBlob) return;
     const url = URL.createObjectURL(downloadBlob);
@@ -119,7 +192,8 @@ export default function PdfToTextClient() {
     URL.revokeObjectURL(url);
   };
 
-  const handleCopyToClipboard = () => {
+  const handleCopy = () => {
+    if (!extractedText) return;
     navigator.clipboard.writeText(extractedText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -129,7 +203,7 @@ export default function PdfToTextClient() {
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
         title="Extract text from PDF online — free and private"
-        description="Extract raw text layout from any PDF document instantly. Runs entirely in your browser to safeguard your sensitive documents. Copy text directly or download as a text file."
+        description="Pull selectable text from any PDF document. Works fully in your browser — files are never uploaded to any server."
         accept=".pdf"
         multiple={false}
         uploadedFiles={uploadedFiles}
@@ -143,24 +217,47 @@ export default function PdfToTextClient() {
         onConvert={handleConvert}
         onDownload={handleDownload}
       >
-        {/* Custom display of extracted text */}
+        {/* Custom Settings Config */}
+        {showOcrPrompt && !isProcessing && (
+          <div className="p-4 bg-accent-bg/40 border border-accent/15 rounded-lg flex flex-col items-center space-y-3 text-center">
+            <svg className="w-6 h-6 text-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <div className="space-y-1">
+              <p className="text-xs text-foreground/80 font-bold">
+                No selectable text layer found. Would you like to run optical character recognition (OCR) instead?
+              </p>
+              <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+                OCR extracts text from image data locally inside your browser. No server calls are made. 
+                Best results are achieved with clear, high-resolution scans.
+              </p>
+            </div>
+            <button
+              onClick={handleRunOcr}
+              className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded shadow transition-colors cursor-pointer"
+            >
+              Run Local OCR
+            </button>
+          </div>
+        )}
+
         {extractedText && (
-          <div className="space-y-3 text-left">
-            <div className="flex items-center justify-between border-b border-card-border pb-1.5">
+          <div className="space-y-3 pt-4 border-t border-card-border text-left">
+            <div className="flex justify-between items-center">
               <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60">
-                Extracted Text Contents
+                Extracted Text Output
               </span>
               <button
-                onClick={handleCopyToClipboard}
-                className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider bg-background-subtle border border-card-border hover:border-accent text-accent rounded transition-colors cursor-pointer"
+                onClick={handleCopy}
+                className="text-[10px] uppercase tracking-wider font-bold text-accent hover:underline cursor-pointer"
               >
-                {copied ? 'Copied!' : 'Copy Text'}
+                {copied ? 'Copied!' : 'Copy to Clipboard'}
               </button>
             </div>
             <textarea
               readOnly
               value={extractedText}
-              className="w-full h-64 p-3 bg-background border border-card-border rounded text-xs text-foreground/80 focus:outline-none font-mono resize-none"
+              className="w-full h-48 bg-background-subtle border border-card-border rounded p-3 text-xs focus:outline-none text-foreground/80 font-mono font-medium resize-none"
             />
           </div>
         )}
