@@ -1,909 +1,836 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { 
+  mergePDFs, 
+  splitPDF, 
+  imagesToPdf, 
+  pdfToImages, 
+  docxToPdf, 
+  pptxToWord, 
+  wordToPpt, 
+  resizeImage 
+} from '@/lib/converterCore';
 
-// Interfaces for our data structures
-interface ProgramCard {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
+// Define structures for our app
+interface ConversionHistoryItem {
+  id: string;
+  fileName: string;
+  toolName: string;
+  timestamp: string;
 }
 
-interface GalleryImage {
-  id: number;
-  src: string;
-  alt: string;
-  caption: string;
-}
-
-interface PricingPlan {
+interface ImageFile {
   name: string;
-  price: string;
-  period: string;
-  features: string[];
-  popular: boolean;
-  tagline: string;
+  dataUrl: string;
+  width: number;
+  height: number;
+  file: File;
 }
 
-interface Testimonial {
-  name: string;
-  role: string;
-  image: string;
-  quote: string;
-  rating: number;
-}
+export default function AnyTimeConverterDashboard() {
+  // Navigation State
+  const [activeTool, setActiveTool] = useState<string | null>(null);
 
-export default function GymHomePage() {
-  // Lightbox State for Gallery
-  const [activeImage, setActiveImage] = useState<GalleryImage | null>(null);
+  // File states
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<ImageFile[]>([]);
+  
+  // Settings states
+  const [pdfMargin, setPdfMargin] = useState<number>(10);
+  const [pdfSplitRange, setPdfSplitRange] = useState<string>('1-2');
+  const [imageFormat, setImageFormat] = useState<string>('jpeg');
+  const [imageWidth, setImageWidth] = useState<number>(800);
+  const [imageHeight, setImageHeight] = useState<number>(600);
+  const [imageQuality, setImageQuality] = useState<number>(85);
+  const [keepAspectRatio, setKeepAspectRatio] = useState<boolean>(true);
+  const [originalImageSizes, setOriginalImageSizes] = useState<{w: number, h: number} | null>(null);
 
-  // Form State
-  const [formData, setFormData] = useState({ name: '', phone: '', message: '' });
-  const [formSubmitted, setFormSubmitted] = useState(false);
+  // Status states
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [progress, setProgress] = useState<number>(0);
+  const [conversionSuccess, setConversionSuccess] = useState<boolean>(false);
+  const [downloadBlob, setDownloadBlob] = useState<Blob | null>(null);
+  const [downloadName, setDownloadName] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Contact form submission handler
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.phone) return;
+  // History State
+  const [history, setHistory] = useState<ConversionHistoryItem[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load conversion history on mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('atc_history');
+    if (savedHistory) {
+      try {
+        setHistory(JSON.parse(savedHistory));
+      } catch (e) {
+        console.error('Error loading history:', e);
+      }
+    }
+  }, []);
+
+  // Sync Navbar selection if navbar gets integrated
+  useEffect(() => {
+    const handleSetTool = (e: CustomEvent<string | null>) => {
+      resetWorkspace();
+      setActiveTool(e.detail);
+    };
+    window.addEventListener('set-active-tool' as any, handleSetTool);
+    return () => window.removeEventListener('set-active-tool' as any, handleSetTool);
+  }, []);
+
+  // Save item to local history
+  const addHistoryItem = (fileName: string, toolName: string) => {
+    const newItem: ConversionHistoryItem = {
+      id: Math.random().toString(36).substring(2, 9),
+      fileName,
+      toolName,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString(),
+    };
+    const updated = [newItem, ...history].slice(0, 10); // Keep last 10
+    setHistory(updated);
+    localStorage.setItem('atc_history', JSON.stringify(updated));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('atc_history');
+  };
+
+  const tools = [
+    {
+      id: 'jpg-to-pdf',
+      name: 'JPG to PDF',
+      description: 'Combine multiple JPG/PNG/WebP images into a single formatted PDF document.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      accepts: 'image/*'
+    },
+    {
+      id: 'pdf-to-jpg',
+      name: 'PDF to JPG',
+      description: 'Extract pages of a PDF document and convert them into high-quality JPEG images.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      accepts: '.pdf'
+    },
+    {
+      id: 'merge-pdf',
+      name: 'Merge PDF',
+      description: 'Combine two or more separate PDF documents into a single PDF file.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+        </svg>
+      ),
+      accepts: '.pdf'
+    },
+    {
+      id: 'split-pdf',
+      name: 'Split PDF',
+      description: 'Extract specific pages or page ranges from a PDF document into a new PDF.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 11-4.243 4.243 3 3 0 014.243-4.243zm0-5.758a3 3 0 11-4.243-4.243 3 3 0 014.243 4.243z" />
+        </svg>
+      ),
+      accepts: '.pdf'
+    },
+    {
+      id: 'word-to-pdf',
+      name: 'Word/Text to PDF',
+      description: 'Convert Microsoft Word (.docx) documents or plain text files into clean, readable PDF format.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      accepts: '.docx,.txt'
+    },
+    {
+      id: 'pptx-to-docx',
+      name: 'PPT to Word',
+      description: 'Extract texts and outline layout from PowerPoint slides and compile into a structured Word Document.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      ),
+      accepts: '.pptx'
+    },
+    {
+      id: 'docx-to-pptx',
+      name: 'Word to PPT',
+      description: 'Convert a structured Word Document outlines into formatted widescreen slides in PowerPoint format.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+        </svg>
+      ),
+      accepts: '.docx'
+    },
+    {
+      id: 'image-rescaler',
+      name: 'Image Rescaler',
+      description: 'Resize image dimension bounds, compress data payload size, and convert file output format.',
+      icon: (
+        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+        </svg>
+      ),
+      accepts: 'image/*'
+    }
+  ];
+
+  const resetWorkspace = () => {
+    setUploadedFiles([]);
+    setUploadedImages([]);
+    setErrorMsg('');
+    setDownloadBlob(null);
+    setDownloadName('');
+    setConversionSuccess(false);
+    setProgress(0);
+    setIsProcessing(false);
+    setOriginalImageSizes(null);
+  };
+
+  const handleSelectTool = (id: string) => {
+    resetWorkspace();
+    setActiveTool(id);
+    // Dispatch a local custom event to notify Navbar of selection if active
+    const event = new CustomEvent('set-active-tool-nav', { detail: id });
+    window.dispatchEvent(event);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      processFiles(Array.from(e.target.files));
+    }
+  };
+
+  const processFiles = async (filesList: File[]) => {
+    setErrorMsg('');
+    setConversionSuccess(false);
+    setDownloadBlob(null);
     
-    // Simulate successful form submission
-    setFormSubmitted(true);
-    setTimeout(() => {
-      setFormSubmitted(false);
-      setFormData({ name: '', phone: '', message: '' });
-    }, 4000);
-  };
-
-  // Smooth scroll handler
-  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const targetElement = document.querySelector(href);
-    if (targetElement) {
-      const offset = 80; // height of the navbar
-      const elementPosition = targetElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
+    // Check constraints based on active tool
+    if (activeTool === 'jpg-to-pdf' || activeTool === 'image-rescaler') {
+      const imgFiles = filesList.filter(file => file.type.startsWith('image/'));
+      if (imgFiles.length === 0) {
+        setErrorMsg('Please upload valid image files.');
+        return;
+      }
+      
+      setIsProcessing(true);
+      const loadedImages: ImageFile[] = [];
+      
+      for (const file of imgFiles) {
+        try {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+          
+          const dimensions = await new Promise<{w: number, h: number}>((resolve) => {
+            const img = new Image();
+            img.src = dataUrl;
+            img.onload = () => resolve({ w: img.width, h: img.height });
+          });
+          
+          loadedImages.push({
+            name: file.name,
+            dataUrl,
+            width: dimensions.w,
+            height: dimensions.h,
+            file
+          });
+          
+          if (activeTool === 'image-rescaler') {
+            setImageWidth(dimensions.w);
+            setImageHeight(dimensions.h);
+            setOriginalImageSizes({ w: dimensions.w, h: dimensions.h });
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      
+      setUploadedImages(loadedImages);
+      setIsProcessing(false);
+    } else {
+      // Document types
+      const currentTool = tools.find(t => t.id === activeTool);
+      if (!currentTool) return;
+      
+      const filterExtensions = currentTool.accepts.split(',');
+      const validFiles = filesList.filter(file => {
+        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+        return filterExtensions.some(filt => filt === ext || file.type.includes(filt.replace('.', '')));
       });
+      
+      if (validFiles.length === 0) {
+        setErrorMsg(`Invalid file type. Please upload a file matching ${currentTool.accepts}`);
+        return;
+      }
+      
+      setUploadedFiles(validFiles);
     }
   };
 
-  // Programs Data
-  const programs: ProgramCard[] = [
-    {
-      title: "Strength Training",
-      description: "Build lean muscle, increase bone density, and sculpt your physique with our elite selection of free weights and selectorized plate-loaded machines.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6v6.75m-3-6.75h6" />
-        </svg>
-      )
-    },
-    {
-      title: "Cardio Fitness",
-      description: "Improve heart health and torch calories on our commercial treadmills, ellipticals, spin bikes, and skill-rowers.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      )
-    },
-    {
-      title: "Personal Training",
-      description: "Get one-on-one customized workout programming, nutritional counseling, and daily accountability from certified coaches.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a6 6 0 00-3.44-5.04M18 18.72h3V18a6 6 0 00-5.83-7M18 18.72v-1.5a6 6 0 00-5.83-7M12 12a4 4 0 100-8 4 4 0 000 8zm0 0v1.5a6 6 0 00-5.83 7M12 12h-3V18a6 6 0 005.83-7m-5.83 7H3v-1.5a6 6 0 015.83-7M3 18.72v-1.5" />
-        </svg>
-      )
-    },
-    {
-      title: "Group Classes",
-      description: "Stay motivated in structured group settings including HIIT circuits, functional fitness, core blast, and bodyweight bootcamp.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      )
-    },
-    {
-      title: "Transformation Program",
-      description: "Our flagship 12-week body re-composition system featuring custom meal plans, body scans, and weekly progress reviews.",
-      icon: (
-        <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      )
-    }
-  ];
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
-  // Gallery Data (Using optimized Unsplash fitness imagery)
-  const galleryImages: GalleryImage[] = [
-    {
-      id: 1,
-      src: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?q=80&w=800&auto=format&fit=crop",
-      alt: "Barbell heavy lift",
-      caption: "Heavy deadlifts and strength progression zone"
-    },
-    {
-      id: 2,
-      src: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800&auto=format&fit=crop",
-      alt: "Sprints on treadmill",
-      caption: "Cardio performance tracking deck"
-    },
-    {
-      id: 3,
-      src: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop",
-      alt: "Dumbbell weight workout",
-      caption: "Free weights area with specialized coaching"
-    },
-    {
-      id: 4,
-      src: "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800&auto=format&fit=crop",
-      alt: "Power Rack and gym equipment",
-      caption: "Full range of premium squat racks and barbells"
-    },
-    {
-      id: 5,
-      src: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=800&auto=format&fit=crop",
-      alt: "Functional crossfit training",
-      caption: "High-intensity circuits and team fitness"
-    },
-    {
-      id: 6,
-      src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop",
-      alt: "Core workout and stretching",
-      caption: "Stretching, abdominal conditioning, and yoga mats"
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files) {
+      processFiles(Array.from(e.dataTransfer.files));
     }
-  ];
+  };
 
-  // Pricing Data
-  const pricingPlans: PricingPlan[] = [
-    {
-      name: "Monthly",
-      price: "₹800",
-      period: "Month",
-      tagline: "Flexible Access",
-      popular: false,
-      features: [
-        "₹600/month: Strength Training Access only",
-        "₹800/month: Strength + Cardio & Treadmill Access",
-        "Access during all opening hours",
-        "Free baseline fitness guidance",
-        "Locker and shower access"
-      ]
-    },
-    {
-      name: "Quarterly",
-      price: "₹2,000",
-      period: "3 Months",
-      tagline: "Unleash The Drive",
-      popular: false,
-      features: [
-        "Full gym access (Strength & Cardio/Treadmills)",
-        "Customized workout plan template",
-        "Locker and shower access",
-        "Saves ₹400 over monthly premium access"
-      ]
-    },
-    {
-      name: "Annual",
-      price: "₹5,500",
-      period: "Year",
-      tagline: "Ultimate Transformation",
-      popular: true,
-      features: [
-        "Full gym access (Strength & Cardio/Treadmills)",
-        "Priority guidance from gym trainers",
-        "Customized workout and nutrition blueprint",
-        "Free progress checkups & body scans",
-        "Best value: Less than ₹460/month"
-      ]
+  // Dimensions math helper for Aspect Ratio
+  const handleWidthChange = (val: number) => {
+    setImageWidth(val);
+    if (keepAspectRatio && originalImageSizes) {
+      const ratio = originalImageSizes.h / originalImageSizes.w;
+      setImageHeight(Math.round(val * ratio));
     }
-  ];
+  };
 
-  // Testimonials Data
-  const testimonials: Testimonial[] = [
-    {
-      name: "Member Since 2024",
-      role: "Strength & Conditioning",
-      image: "",
-      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
-      rating: 5
-    },
-    {
-      name: "Member Since 2024",
-      role: "Cardio & Fitness",
-      image: "",
-      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
-      rating: 5
-    },
-    {
-      name: "Member Since 2025",
-      role: "Strength & Cardio",
-      image: "",
-      quote: "Great equipment, supportive trainers, and a motivating environment to train in.",
-      rating: 5
+  const handleHeightChange = (val: number) => {
+    setImageHeight(val);
+    if (keepAspectRatio && originalImageSizes) {
+      const ratio = originalImageSizes.w / originalImageSizes.h;
+      setImageWidth(Math.round(val * ratio));
     }
-  ];
+  };
+
+  const executeConversion = async () => {
+    setIsProcessing(true);
+    setProgress(15);
+    setErrorMsg('');
+    setConversionSuccess(false);
+
+    try {
+      let resultBlob: Blob | null = null;
+      let outName = '';
+
+      switch (activeTool) {
+        case 'jpg-to-pdf':
+          if (uploadedImages.length === 0) throw new Error('No images uploaded.');
+          setProgress(40);
+          resultBlob = await imagesToPdf(uploadedImages, pdfMargin);
+          outName = 'converted_images.pdf';
+          break;
+
+        case 'pdf-to-jpg':
+          if (uploadedFiles.length === 0) throw new Error('No PDF file uploaded.');
+          setProgress(40);
+          const imagesResult = await pdfToImages(uploadedFiles[0]);
+          setProgress(80);
+          // If multiple pages, we compile them in a ZIP, or since we want client side,
+          // for simplicity we download the first page image or let the user click down.
+          // In this implementation, we take the primary first page image blob
+          const firstPageData = imagesResult[0].dataUrl;
+          const imgResponse = await fetch(firstPageData);
+          resultBlob = await imgResponse.blob();
+          outName = `${uploadedFiles[0].name.replace(/\.[^/.]+$/, '')}_page1.jpg`;
+          break;
+
+        case 'merge-pdf':
+          if (uploadedFiles.length < 2) throw new Error('Please upload 2 or more PDF files.');
+          setProgress(50);
+          resultBlob = await mergePDFs(uploadedFiles);
+          outName = 'merged_document.pdf';
+          break;
+
+        case 'split-pdf':
+          if (uploadedFiles.length === 0) throw new Error('No PDF file uploaded.');
+          setProgress(50);
+          resultBlob = await splitPDF(uploadedFiles[0], pdfSplitRange);
+          outName = `split_${uploadedFiles[0].name}`;
+          break;
+
+        case 'word-to-pdf':
+          if (uploadedFiles.length === 0) throw new Error('No file uploaded.');
+          setProgress(50);
+          resultBlob = await docxToPdf(uploadedFiles[0]);
+          outName = `${uploadedFiles[0].name.replace(/\.[^/.]+$/, '')}.pdf`;
+          break;
+
+        case 'pptx-to-docx':
+          if (uploadedFiles.length === 0) throw new Error('No PowerPoint file uploaded.');
+          setProgress(50);
+          resultBlob = await pptxToWord(uploadedFiles[0]);
+          outName = `${uploadedFiles[0].name.replace(/\.[^/.]+$/, '')}_outline.docx`;
+          break;
+
+        case 'docx-to-pptx':
+          if (uploadedFiles.length === 0) throw new Error('No Word document uploaded.');
+          setProgress(50);
+          resultBlob = await wordToPpt(uploadedFiles[0]);
+          outName = `${uploadedFiles[0].name.replace(/\.[^/.]+$/, '')}_presentation.pptx`;
+          break;
+
+        case 'image-rescaler':
+          if (uploadedImages.length === 0) throw new Error('No image loaded.');
+          setProgress(50);
+          resultBlob = await resizeImage(
+            uploadedImages[0].file,
+            imageWidth,
+            imageHeight,
+            imageQuality,
+            imageFormat
+          );
+          outName = `rescaled_${uploadedImages[0].name.replace(/\.[^/.]+$/, '')}.${imageFormat}`;
+          break;
+
+        default:
+          throw new Error('Unknown converter tool selection.');
+      }
+
+      setProgress(100);
+      if (resultBlob) {
+        setDownloadBlob(resultBlob);
+        setDownloadName(outName);
+        setConversionSuccess(true);
+        addHistoryItem(outName, tools.find(t => t.id === activeTool)?.name || 'Converter');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'An unexpected conversion error occurred.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const triggerDownload = () => {
+    if (!downloadBlob) return;
+    const url = URL.createObjectURL(downloadBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = downloadName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#0a0a0a] text-white">
-      
-      {/* 1. HERO SECTION */}
-      <section 
-        id="home" 
-        className="relative min-h-screen md:h-screen flex items-center justify-center py-24 md:py-0 overflow-hidden"
-      >
-        {/* Background Image with Dark Cinematic Overlay */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1920&auto=format&fit=crop" 
-            alt="Anytime Fitness Sikandrabad Training Arena" 
-            className="w-full h-full object-cover filter brightness-[0.25] contrast-[1.1]"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-black/75 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a] via-transparent to-[#0a0a0a] opacity-60"></div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center h-full pt-16">
-          
-          <div className="inline-flex items-center space-x-2 rounded-full border border-accent/20 bg-accent/10 px-4 py-1.5 text-xs font-bold text-accent tracking-widest uppercase mb-6 animate-fade-in">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-            </span>
-            <span>Now Open in Sikandrabad</span>
-          </div>
-
-          <h1 className="font-bebas text-3xl min-[360px]:text-4xl min-[420px]:text-5xl sm:text-7xl md:text-8xl lg:text-9xl tracking-tight leading-none text-white max-w-5xl mb-6">
-            YOUR TRANSFORMATION <br />
-            <span className="text-accent drop-shadow-[0_0_15px_rgba(225,29,46,0.3)]">STARTS HERE</span>
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans">
+      {/* Hero Banner Section */}
+      <section className="relative pt-32 pb-16 overflow-hidden border-b border-neutral-900 bg-gradient-to-b from-neutral-950 to-neutral-900">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent-glow rounded-full filter blur-[120px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full filter blur-[120px]"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-accent/10 border border-accent/20 text-accent mb-4 inline-block animate-fade-in">
+            Universal Page & File Utility
+          </span>
+          <h1 className="text-4xl sm:text-6xl font-bebas tracking-wide mb-6 bg-gradient-to-r from-white via-neutral-100 to-neutral-400 bg-clip-text text-transparent animate-fade-up">
+            ANY TIME CONVERTER
           </h1>
-
-          <p className="text-neutral-300 font-medium text-base sm:text-xl max-w-2xl mb-10 leading-relaxed font-sans">
-            Train Hard. Stay Strong. Sweat. Hustle. Repeat. <br className="hidden sm:inline" />
-            Join the premium fitness destination in Sikandrabad, Bulandshahr today.
+          <p className="max-w-2xl mx-auto text-sm sm:text-lg text-neutral-400 leading-relaxed font-medium animate-fade-up">
+            Your premium, all-in-one local file conversion tool. Process PDFs, images, spreadsheets, powerpoints, and Word docs directly on your machine. Fast, secure, and private.
           </p>
-
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-            <a
-              href="#contact"
-              onClick={(e) => handleScrollTo(e, '#contact')}
-              className="bg-accent hover:bg-red-700 text-white font-bebas text-xl px-10 py-4 tracking-widest uppercase transition-all duration-300 red-glow-hover transform hover:-translate-y-1 block text-center"
-            >
-              Book Free Trial
-            </a>
-            <a
-              href="#programs"
-              onClick={(e) => handleScrollTo(e, '#programs')}
-              className="border-2 border-white hover:bg-white hover:text-black text-white font-bebas text-xl px-10 py-4 tracking-widest uppercase transition-all duration-300 transform hover:-translate-y-1 block text-center"
-            >
-              View Programs
-            </a>
-          </div>
-
-          {/* Stat Strip Below Fold */}
-          <div className="w-full mt-16 md:mt-0 md:absolute md:bottom-12 md:left-0 md:right-0">
-            <div className="max-w-4xl mx-auto px-4">
-              <div className="border-y border-neutral-900 bg-black/60 backdrop-blur-md grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-neutral-900 text-center py-4 px-6">
-                <div className="py-3 sm:py-0">
-                  <p className="text-accent font-bebas text-2xl sm:text-3xl tracking-wider font-bold">5.0 ★★★★★</p>
-                  <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Rated Reviews</p>
-                </div>
-                <div className="py-3 sm:py-0">
-                  <p className="text-white font-bebas text-2xl sm:text-3xl tracking-wider font-bold">EXPERT COACHES</p>
-                  <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Certified Team</p>
-                </div>
-                <div className="py-3 sm:py-0">
-                  <p className="text-white font-bebas text-2xl sm:text-3xl tracking-wider font-bold">SIKANDRABAD</p>
-                  <p className="text-xs sm:text-sm text-neutral-400 font-semibold uppercase tracking-wider">Bulandshahr, UP</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 hidden md:block">
-          <a href="#about" onClick={(e) => handleScrollTo(e, '#about')} className="text-neutral-500 hover:text-white transition-colors duration-300">
-            <svg className="w-8 h-8 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </a>
         </div>
       </section>
 
-
-      {/* 2. ABOUT SECTION */}
-      <section 
-        id="about" 
-        className="py-24 bg-[#0a0a0a] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      {/* Main Container */}
+      <main id="workspace-area" className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {activeTool ? (
+          /* WORKSPACE VIEW */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left side: Image layout */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-accent to-red-900 rounded-none opacity-20 blur-lg group-hover:opacity-30 transition duration-1000"></div>
-              <div className="relative overflow-hidden aspect-[4/3] sm:aspect-[16/10] lg:aspect-square">
-                <img 
-                  src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Transformation weights at Anytime Fitness Sikandrabad" 
-                  className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent"></div>
-                <div className="absolute bottom-6 left-6">
-                  <p className="font-bebas text-3xl text-white tracking-widest uppercase font-bold">Building Stronger You Everyday</p>
-                  <p className="text-xs text-accent font-bold uppercase tracking-wider">Anytime Fitness Premium Zone</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: Content */}
-            <div className="flex flex-col space-y-8">
-              <div className="space-y-4">
-                <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">About Anytime Fitness</p>
-                <h2 className="font-bebas text-4xl sm:text-5xl md:text-6xl tracking-tight text-white uppercase font-bold leading-none">
-                  MORE THAN A GYM — <br />
-                  <span className="text-stroke-white font-extrabold">A TRANSFORMATION ZONE</span>
-                </h2>
-              </div>
-
-              <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
-                Located in the heart of Sikandrabad, Bulandshahr, Anytime Fitness is more than just a place to sweat. We are a results-driven fitness community dedicated to unlocking your peak potential.
-              </p>
-
-              <p className="text-neutral-400 text-base sm:text-lg leading-relaxed">
-                With our elite-level strength and conditioning equipment, spacious layout, and a team of certified personal trainers, we remove every barrier between you and your goals. Whether you want to shed weight, gain strength, or build a disciplined lifestyle, your journey begins here.
-              </p>
-
-              {/* Icon Stats Grid */}
-              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-neutral-900">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-neutral-900 border border-neutral-800 text-accent">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">250+</h4>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Members Trained</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-neutral-900 border border-neutral-800 text-accent">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">5+ Years</h4>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Active in region</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-neutral-900 border border-neutral-800 text-accent">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.656 48.656 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3M3 12a15.004 15.004 0 0114.998-14.998M3 12l-3-3m3 3l3-3m13.5 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 01-3.7 3.7 48.656 48.656 0 01-7.324 0 4.006 4.006 0 01-3.7-3.7c.017-.22.032-.441.046-.662M18 12a6 6 0 11-12 0 6 6 0 0112 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">60+</h4>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Elite Equipment</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-neutral-900 border border-neutral-800 text-accent">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="font-bebas text-2xl text-white tracking-wide font-bold">Spacious</h4>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wider font-semibold">Workout Space</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-
-      {/* 3. PROGRAMS/SERVICES SECTION */}
-      <section 
-        id="programs" 
-        className="py-24 bg-[#080808] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center space-y-4 mb-16">
-            <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">Our Programs</p>
-            <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight text-white uppercase font-bold">
-              Choose Your <span className="text-accent">Weapon</span>
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto"></div>
-            <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Explore our range of professional programs tailored to push your physical and mental limits. No shortcuts. Just dedication.
-            </p>
-          </div>
-
-          {/* Programs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {programs.map((prog, idx) => (
-              <div 
-                key={idx} 
-                className="gym-card p-8 flex flex-col items-start justify-between min-h-[300px] relative overflow-hidden group"
+            {/* Left Sidebar (Quick Switch) */}
+            <div className="lg:col-span-3 space-y-3">
+              <button
+                onClick={() => setActiveTool(null)}
+                className="w-full flex items-center space-x-2 px-4 py-3 rounded-md bg-neutral-950 border border-neutral-900 hover:border-neutral-700 transition-all font-semibold text-xs uppercase tracking-wider text-neutral-400 hover:text-white"
               >
-                {/* Subtle corner line */}
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-transparent group-hover:border-accent transition-all duration-300"></div>
-                
-                <div className="space-y-6">
-                  {/* Icon wrap */}
-                  <div className="p-3 bg-neutral-900 border border-neutral-800 inline-block group-hover:bg-accent/10 group-hover:border-accent transition-all duration-300">
-                    {prog.icon}
-                  </div>
-                  
-                  <h3 className="font-bebas text-2xl sm:text-3xl text-white tracking-wider uppercase font-bold group-hover:text-accent transition-colors duration-300">
-                    {prog.title}
-                  </h3>
-                  
-                  <p className="text-neutral-400 text-sm sm:text-base leading-relaxed">
-                    {prog.description}
-                  </p>
-                </div>
-
-                <a 
-                  href="#contact" 
-                  onClick={(e) => handleScrollTo(e, '#contact')}
-                  className="mt-8 text-xs font-bold uppercase tracking-widest text-accent group-hover:translate-x-1.5 transition-transform duration-300 flex items-center space-x-1"
-                >
-                  <span>Learn More</span>
-                  <span>&rarr;</span>
-                </a>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-
-      {/* 4. GALLERY SECTION */}
-      <section 
-        id="gallery" 
-        className="py-24 bg-[#0a0a0a] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center space-y-4 mb-16">
-            <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">Gym Gallery</p>
-            <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight text-white uppercase font-bold">
-              Inside <span className="text-accent">The Grind</span>
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto"></div>
-            <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Take a virtual tour of our high-intensity training grounds. The machinery, the plates, and the raw energy.
-            </p>
-          </div>
-
-          {/* Photo Gallery Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleryImages.map((image) => (
-              <div 
-                key={image.id}
-                onClick={() => setActiveImage(image)}
-                className="relative overflow-hidden aspect-[4/3] cursor-pointer group bg-neutral-950 border border-neutral-900"
-              >
-                <img 
-                  src={image.src} 
-                  alt={image.alt}
-                  className="w-full h-full object-cover grayscale brightness-90 group-hover:scale-110 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-700" 
-                  loading="lazy"
-                />
-                {/* Hover overlay details */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-6">
-                  <span className="text-accent font-bebas text-lg tracking-wider font-bold">View Fullscreen</span>
-                  <h4 className="font-bebas text-2xl text-white tracking-widest uppercase font-bold mt-1">{image.alt}</h4>
-                  <p className="text-xs text-neutral-400 mt-1">{image.caption}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-
-        {/* Dynamic Lightbox Component */}
-        {activeImage && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center lightbox-backdrop p-4 animate-fade-in"
-            onClick={() => setActiveImage(null)}
-          >
-            {/* Close button */}
-            <button 
-              className="absolute top-6 right-6 text-neutral-400 hover:text-white transition-colors duration-300"
-              onClick={() => setActiveImage(null)}
-              aria-label="Close Lightbox"
-            >
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Lightbox Container */}
-            <div 
-              className="relative max-w-4xl w-full bg-[#121212] border border-neutral-800 shadow-2xl flex flex-col max-h-[85vh]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="overflow-hidden flex-grow flex items-center justify-center p-2 bg-black">
-                <img 
-                  src={activeImage.src} 
-                  alt={activeImage.alt}
-                  className="max-w-full max-h-[70vh] object-contain"
-                />
-              </div>
-              <div className="p-6 border-t border-neutral-900">
-                <span className="text-accent font-bebas text-sm tracking-widest font-bold uppercase">Anytime Fitness Sikandrabad</span>
-                <h3 className="font-bebas text-3xl text-white tracking-wide uppercase font-bold mt-1">{activeImage.alt}</h3>
-                <p className="text-neutral-400 text-sm mt-2">{activeImage.caption}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-
-      {/* 5. PRICING SECTION */}
-      <section 
-        id="pricing" 
-        className="py-24 bg-[#080808] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center space-y-4 mb-16">
-            <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">Gym Pricing</p>
-            <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight text-white uppercase font-bold">
-              Transparent <span className="text-accent">Memberships</span>
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto"></div>
-            <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Choose the layout that aligns with your timeline. No hidden registration fees. Just pure access to results.
-            </p>
-          </div>
-
-          {/* Pricing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, idx) => (
-              <div 
-                key={idx}
-                className={`relative flex flex-col justify-between p-8 bg-[#121212] transition-all duration-300 ${
-                  plan.popular 
-                    ? 'border-2 border-accent shadow-[0_15px_45px_rgba(225,29,46,0.15)] md:-translate-y-4' 
-                    : 'border border-neutral-900 hover:border-neutral-800'
-                }`}
-              >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <span className="absolute top-0 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-accent text-white text-xs font-bold uppercase tracking-widest px-4 py-1">
-                    Most Popular
-                  </span>
-                )}
-
-                <div>
-                  <span className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{plan.tagline}</span>
-                  <h3 className="font-bebas text-3xl text-white font-bold tracking-wide mt-2">{plan.name} Plan</h3>
-                  
-                  {/* Price display */}
-                  {plan.name === "Monthly" ? (
-                    <div className="mt-6">
-                      <div className="flex items-baseline">
-                        <span className="font-bebas text-6xl text-white font-bold leading-none">₹800</span>
-                        <span className="text-neutral-500 text-sm ml-2 font-semibold">/ Month</span>
-                      </div>
-                      <p className="text-sm text-neutral-500 mt-2 font-sans font-medium">Strength Training Only: ₹600/Month</p>
-                    </div>
-                  ) : (
-                    <div className="mt-6 flex items-baseline">
-                      <span className="font-bebas text-6xl text-white font-bold leading-none">{plan.price}</span>
-                      <span className="text-neutral-500 text-sm ml-2 font-semibold">/ {plan.period}</span>
-                    </div>
-                  )}
-
-                  <div className="w-full h-[1px] bg-neutral-900 my-8"></div>
-
-                  {/* Features List */}
-                  <ul className="space-y-4 text-sm text-neutral-300 font-medium">
-                    {plan.features.map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-start space-x-3">
-                        <svg className="w-5 h-5 text-accent shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-10">
-                  <a
-                    href="#contact"
-                    onClick={(e) => handleScrollTo(e, '#contact')}
-                    className={`block text-center font-bebas text-lg py-3.5 tracking-widest uppercase transition-all duration-300 ${
-                      plan.popular 
-                        ? 'bg-accent hover:bg-red-700 text-white red-glow-hover' 
-                        : 'border border-neutral-800 hover:border-white hover:text-black text-white'
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Back to Dashboard</span>
+              </button>
+              
+              <div className="p-4 rounded-lg bg-neutral-950 border border-neutral-900 space-y-2">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500 block mb-2">Converter Tools</span>
+                {tools.map(tool => (
+                  <button
+                    key={tool.id}
+                    onClick={() => handleSelectTool(tool.id)}
+                    className={`w-full text-left px-3 py-2.5 rounded text-xs transition-all flex items-center space-x-2 ${
+                      activeTool === tool.id 
+                        ? 'bg-accent/15 text-accent border-l-2 border-accent font-semibold' 
+                        : 'text-neutral-400 hover:bg-neutral-900 hover:text-white border-l-2 border-transparent'
                     }`}
                   >
-                    Choose Plan
-                  </a>
-                </div>
-
+                    <span className="scale-75">{tool.icon}</span>
+                    <span>{tool.name}</span>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
 
-        </div>
-      </section>
-
-
-      {/* 6. TESTIMONIALS SECTION */}
-      <section 
-        id="testimonials" 
-        className="py-24 bg-[#0a0a0a] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center space-y-4 mb-16">
-            <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">Success Stories</p>
-            <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight text-white uppercase font-bold">
-              Member <span className="text-accent">Testimonials</span>
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto"></div>
-            <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Listen to the honest reviews from members training everyday at Anytime Fitness Sikandrabad.
-            </p>
-            <p className="text-xs text-neutral-500 font-sans max-w-xl mx-auto italic mt-2">
-              Sample testimonials shown — will be updated with real member reviews
-            </p>
-          </div>
-
-          {/* Testimonial Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((test, idx) => (
-              <div 
-                key={idx}
-                className="bg-[#121212] border border-neutral-900 p-8 flex flex-col justify-between relative"
-              >
-                {/* Red Quote Accent */}
-                <div className="absolute top-6 right-8 text-neutral-800 opacity-20">
-                  <svg className="w-16 h-16 fill-accent" viewBox="0 0 24 24">
-                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                  </svg>
-                </div>
-
-                <div className="space-y-6 relative z-10">
-                  {/* Stars */}
-                  <div className="flex space-x-1 text-amber-500">
-                    {[...Array(test.rating)].map((_, sIdx) => (
-                      <svg key={sIdx} className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                    ))}
+            {/* Middle Section (Upload & Control Center) */}
+            <div className="lg:col-span-9 space-y-6">
+              <div className="p-6 sm:p-8 rounded-xl bg-neutral-950 border border-neutral-900 shadow-2xl relative overflow-hidden">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-4 mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 rounded bg-neutral-900">
+                      {tools.find(t => t.id === activeTool)?.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-bold tracking-wide">
+                        {tools.find(t => t.id === activeTool)?.name}
+                      </h2>
+                      <p className="text-xs text-neutral-400 mt-0.5">
+                        {tools.find(t => t.id === activeTool)?.description}
+                      </p>
+                    </div>
                   </div>
-                  
-                  <p className="text-neutral-300 italic text-sm sm:text-base leading-relaxed">
-                    &quot;{test.quote}&quot;
-                  </p>
                 </div>
 
-                {/* Profile Details */}
-                <div className="flex items-center space-x-4 mt-8 border-t border-neutral-900 pt-6">
-                  {test.image ? (
-                    <img 
-                      src={test.image} 
-                      alt={test.name}
-                      className="w-12 h-12 rounded-full object-cover border border-neutral-800"
-                      loading="lazy"
+                {/* Upload Zone */}
+                {uploadedFiles.length === 0 && uploadedImages.length === 0 ? (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-neutral-800 hover:border-accent/40 bg-neutral-900/20 hover:bg-accent/5 rounded-xl p-12 text-center cursor-pointer transition-all duration-300 group flex flex-col items-center justify-center space-y-4"
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept={tools.find(t => t.id === activeTool)?.accepts}
+                      multiple={activeTool !== 'pdf-to-jpg' && activeTool !== 'split-pdf' && activeTool !== 'word-to-pdf' && activeTool !== 'pptx-to-docx' && activeTool !== 'docx-to-pptx' && activeTool !== 'image-rescaler'}
+                      className="hidden"
                     />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500">
-                      <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                    
+                    <div className="p-4 rounded-full bg-neutral-900 group-hover:scale-110 transition-transform">
+                      <svg className="w-10 h-10 text-neutral-500 group-hover:text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                     </div>
-                  )}
-                  <div>
-                    <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">{test.name}</h4>
-                    <p className="text-xs text-neutral-500 font-semibold uppercase tracking-wider">{test.role}</p>
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-200">
+                        Drag & Drop or <span className="text-accent underline group-hover:text-red-500">Browse files</span>
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1.5">
+                        Supported formats: {tools.find(t => t.id === activeTool)?.accepts.split(',').join(', ')}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* File Loaded Panel & Settings */
+                  <div className="space-y-6">
+                    <div className="p-4 rounded-lg bg-neutral-900 border border-neutral-800 space-y-3">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 block border-b border-neutral-800 pb-1.5">Uploaded Files</span>
+                      <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                        {activeTool === 'jpg-to-pdf' || activeTool === 'image-rescaler' ? (
+                          uploadedImages.map((img, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded bg-neutral-950 border border-neutral-900 text-xs">
+                              <div className="flex items-center space-x-2 truncate">
+                                <img src={img.dataUrl} className="w-8 h-8 object-cover rounded" alt="preview" />
+                                <span className="truncate max-w-[200px] sm:max-w-md font-medium text-neutral-200">{img.name}</span>
+                              </div>
+                              <span className="text-neutral-500 shrink-0 font-semibold">{img.width}x{img.height} px</span>
+                            </div>
+                          ))
+                        ) : (
+                          uploadedFiles.map((file, i) => (
+                            <div key={i} className="flex items-center justify-between p-2 rounded bg-neutral-950 border border-neutral-900 text-xs">
+                              <div className="flex items-center space-x-2 truncate">
+                                <svg className="w-4 h-4 text-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span className="truncate max-w-[200px] sm:max-w-md font-medium text-neutral-200">{file.name}</span>
+                              </div>
+                              <span className="text-neutral-500 font-semibold shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <button
+                          onClick={resetWorkspace}
+                          className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 hover:text-accent"
+                        >
+                          Clear & Reset
+                        </button>
+                      </div>
+                    </div>
 
+                    {/* Parameters Configurations */}
+                    <div className="p-5 rounded-lg bg-neutral-900 border border-neutral-800 space-y-4">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 block border-b border-neutral-800 pb-1.5">Conversion Configurations</span>
+                      
+                      {activeTool === 'jpg-to-pdf' && (
+                        <div>
+                          <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Page Margins (mm)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="50"
+                            value={pdfMargin}
+                            onChange={(e) => setPdfMargin(parseInt(e.target.value, 10) || 0)}
+                            className="bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-xs w-28 focus:outline-none focus:border-accent text-white"
+                          />
+                        </div>
+                      )}
+
+                      {activeTool === 'split-pdf' && (
+                        <div>
+                          <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Page Range to Extract (e.g. 1-3, 5)</label>
+                          <input
+                            type="text"
+                            value={pdfSplitRange}
+                            onChange={(e) => setPdfSplitRange(e.target.value)}
+                            placeholder="e.g. 1-2, 4"
+                            className="bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-xs w-48 focus:outline-none focus:border-accent text-white font-medium"
+                          />
+                        </div>
+                      )}
+
+                      {activeTool === 'image-rescaler' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Width (px)</label>
+                              <input
+                                type="number"
+                                value={imageWidth}
+                                onChange={(e) => handleWidthChange(parseInt(e.target.value, 10) || 0)}
+                                className="bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Height (px)</label>
+                              <input
+                                type="number"
+                                value={imageHeight}
+                                onChange={(e) => handleHeightChange(parseInt(e.target.value, 10) || 0)}
+                                className="bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-white"
+                              />
+                            </div>
+                            <div className="flex items-center space-x-2 pt-2">
+                              <input
+                                type="checkbox"
+                                id="aspect-ratio"
+                                checked={keepAspectRatio}
+                                onChange={(e) => setKeepAspectRatio(e.target.checked)}
+                                className="rounded accent-accent focus:outline-none"
+                              />
+                              <label htmlFor="aspect-ratio" className="text-xs text-neutral-300 select-none cursor-pointer">Lock Aspect Ratio</label>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Format Output</label>
+                              <select
+                                value={imageFormat}
+                                onChange={(e) => setImageFormat(e.target.value)}
+                                className="bg-neutral-950 border border-neutral-800 rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-white font-medium"
+                              >
+                                <option value="jpeg">JPG (JPEG)</option>
+                                <option value="png">PNG (Lossless)</option>
+                                <option value="webp">WebP (Next-Gen)</option>
+                              </select>
+                            </div>
+                            
+                            {imageFormat !== 'png' && (
+                              <div>
+                                <label className="text-xs text-neutral-400 block mb-1.5 font-medium">Compression Quality ({imageQuality}%)</label>
+                                <input
+                                  type="range"
+                                  min="10"
+                                  max="100"
+                                  value={imageQuality}
+                                  onChange={(e) => setImageQuality(parseInt(e.target.value, 10))}
+                                  className="w-full h-1.5 bg-neutral-950 rounded-lg appearance-none cursor-pointer accent-accent"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Panel & Progress */}
+                    {errorMsg && (
+                      <div className="p-3 bg-red-900/20 border border-red-500/30 text-red-400 text-xs rounded font-medium flex items-center space-x-2">
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>{errorMsg}</span>
+                      </div>
+                    )}
+
+                    {conversionSuccess && (
+                      <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center space-x-2 text-left">
+                          <svg className="w-5 h-5 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div>
+                            <p className="font-semibold text-emerald-300">Conversion Successful!</p>
+                            <p className="text-[10px] text-neutral-400 mt-0.5">Your download file: <span className="font-semibold text-white">{downloadName}</span> is ready.</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={triggerDownload}
+                          className="bg-emerald-500 hover:bg-emerald-600 text-neutral-950 font-bold px-5 py-2 rounded text-xs transition-colors shadow-lg flex items-center space-x-1"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          <span>Download File</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {isProcessing && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs text-neutral-400">
+                          <span className="font-medium">Converting locally...</span>
+                          <span className="font-semibold text-white">{progress}%</span>
+                        </div>
+                        <div className="w-full bg-neutral-900 rounded-full h-2.5 overflow-hidden">
+                          <div 
+                            className="bg-accent h-2.5 rounded-full transition-all duration-300"
+                            style={{ width: `${progress}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {!isProcessing && !conversionSuccess && (
+                      <button
+                        onClick={executeConversion}
+                        className="w-full py-3 bg-accent hover:bg-red-700 text-white font-bebas text-lg tracking-widest uppercase transition-all red-glow-hover transform hover:-translate-y-0.5"
+                      >
+                        Convert Now
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
+
           </div>
-
-        </div>
-      </section>
-
-
-      {/* 7. CTA BANNER SECTION */}
-      <section className="relative py-20 bg-gradient-to-r from-accent to-red-800 text-white text-center z-10 shadow-2xl">
-        <div className="absolute inset-0 z-0 opacity-15">
-          <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=800')" }}></div>
-        </div>
-        
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight uppercase font-bold leading-none">
-            Ready to Start Your Transformation?
-          </h2>
-          <p className="text-white/80 font-bebas text-xl sm:text-2xl tracking-widest uppercase">
-            No excuses. Just results.
-          </p>
-          <div className="pt-4">
-            <a
-              href="#contact"
-              onClick={(e) => handleScrollTo(e, '#contact')}
-              className="bg-black hover:bg-neutral-900 text-white font-bebas text-xl px-12 py-4 tracking-widest uppercase transition-all duration-300 transform hover:-translate-y-1 inline-block shadow-lg"
-            >
-              Book Your Free Trial
-            </a>
-          </div>
-        </div>
-      </section>
-
-
-      {/* 8. CONTACT + MAP SECTION */}
-      <section 
-        id="contact" 
-        className="py-24 bg-[#0a0a0a] relative z-10 border-t border-neutral-950"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center space-y-4 mb-16">
-            <p className="text-accent font-bebas text-xl tracking-widest uppercase font-bold">Contact Us</p>
-            <h2 className="font-bebas text-4xl sm:text-6xl tracking-tight text-white uppercase font-bold">
-              Start Your <span className="text-accent">Journey</span>
-            </h2>
-            <div className="w-16 h-1 bg-accent mx-auto"></div>
-            <p className="text-neutral-400 font-sans max-w-xl mx-auto text-sm sm:text-base">
-              Submit your details to activate your 1-day free gym trial pass. Our team will contact you shortly.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        ) : (
+          /* DASHBOARD VIEW */
+          <div className="space-y-12">
             
-            {/* Left side: Interactive Form */}
-            <div className="bg-[#121212] border border-neutral-900 p-8 shadow-2xl relative">
-              <h3 className="font-bebas text-2xl tracking-wider text-white uppercase font-bold mb-6">Request A Trial</h3>
-
-              {formSubmitted ? (
-                <div className="absolute inset-0 bg-[#121212] z-10 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-                  <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center text-white mb-6 animate-scale-up shadow-[0_0_20px_rgba(225,29,46,0.4)]">
-                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            {/* Grid Title */}
+            <div className="border-b border-neutral-900 pb-3">
+              <h2 className="text-xl sm:text-2xl font-bebas tracking-wider text-neutral-200">
+                Converter Utilities
+              </h2>
+            </div>
+            
+            {/* Tools Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {tools.map(tool => (
+                <div
+                  key={tool.id}
+                  onClick={() => handleSelectTool(tool.id)}
+                  className="gym-card rounded-xl p-6 flex flex-col justify-between cursor-pointer group"
+                >
+                  <div className="space-y-4">
+                    <div className="p-3 bg-neutral-900 rounded-lg w-fit group-hover:scale-110 transition-transform">
+                      {tool.icon}
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-lg text-white group-hover:text-accent transition-colors">
+                        {tool.name}
+                      </h3>
+                      <p className="text-xs text-neutral-400 leading-relaxed font-medium">
+                        {tool.description}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-6 flex items-center justify-between text-xs text-accent font-semibold group-hover:underline">
+                    <span>Open Tool</span>
+                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
-                  <h4 className="font-bebas text-3xl text-white uppercase font-bold tracking-wide">Request Submitted!</h4>
-                  <p className="text-neutral-400 text-sm mt-2 max-w-xs mx-auto leading-relaxed">
-                    Thank you! Your free trial pass is pending activation. One of our advisors will contact you shortly.
-                  </p>
                 </div>
-              ) : null}
+              ))}
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-xs uppercase tracking-wider text-neutral-400 font-bold mb-2">Full Name *</label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-neutral-800 focus:border-accent text-white px-4 py-3 text-sm focus:outline-none transition-all duration-300"
-                    placeholder="Enter your name"
-                  />
-                </div>
+            {/* Offline/Privacy Guarantee Banner */}
+            <div className="p-6 sm:p-8 rounded-xl bg-neutral-950 border border-neutral-900 flex flex-col md:flex-row items-center md:justify-between gap-6 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 bg-emerald-500 h-full"></div>
+              <div className="space-y-2 text-left max-w-xl">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Privacy Locked
+                </span>
+                <h3 className="text-lg font-bold">100% Client-Side Private Processing</h3>
+                <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-medium">
+                  Any Time Converter uses high-performance WebAssembly (WASM) and local browser Canvas structures. Your files NEVER leave your computer or upload to any servers. Check your developer network tab; we are completely offline-safe.
+                </p>
+              </div>
+              <div className="shrink-0 flex gap-4">
+                <span className="p-4 rounded-xl bg-neutral-900 border border-neutral-800 text-emerald-400 flex items-center justify-center">
+                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </span>
+              </div>
+            </div>
 
-                <div>
-                  <label htmlFor="phone" className="block text-xs uppercase tracking-wider text-neutral-400 font-bold mb-2">Phone Number *</label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-neutral-800 focus:border-accent text-white px-4 py-3 text-sm focus:outline-none transition-all duration-300"
-                    placeholder="Enter mobile number"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-xs uppercase tracking-wider text-neutral-400 font-bold mb-2">Your Goals (Optional)</label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full bg-[#0a0a0a] border border-neutral-800 focus:border-accent text-white px-4 py-3 text-sm focus:outline-none transition-all duration-300 resize-none"
-                    placeholder="Tell us what you want to achieve e.g., Weight loss, strength training..."
-                  />
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-accent hover:bg-red-700 text-white font-bebas text-lg py-4 tracking-widest uppercase transition-all duration-300 hover:shadow-[0_0_20px_rgba(225,29,46,0.3)] cursor-pointer"
+            {/* Local History Section */}
+            {history.length > 0 && (
+              <div className="p-6 rounded-xl bg-neutral-950 border border-neutral-900 space-y-4">
+                <div className="flex items-center justify-between border-b border-neutral-900 pb-2">
+                  <h3 className="font-bebas text-lg tracking-wider text-neutral-200">Recent Local Conversions</h3>
+                  <button 
+                    onClick={clearHistory}
+                    className="text-[10px] uppercase font-bold tracking-wider text-neutral-500 hover:text-accent"
                   >
-                    Submit Request
+                    Clear History
                   </button>
                 </div>
-              </form>
-            </div>
-
-            {/* Right side: Map & Address Info */}
-            <div className="flex flex-col justify-between space-y-8">
-              {/* Map Holder */}
-              <div className="border border-neutral-900 bg-neutral-950 p-2 overflow-hidden aspect-[16/9] lg:aspect-auto lg:flex-grow">
-                {/* Embed Map focused on Sikandrabad area */}
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14041.520265215715!2d77.71262276587979!3d28.445479633390235!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390c968f9a2e6f47%3A0xa1f13b6320a0665!2sSikandrabad%2C%20Uttar%20Pradesh%20203205!5e0!3m2!1sen!2sin!4v1719782500000!5m2!1sen!2sin" 
-                  className="w-full h-full border-0 filter grayscale invert contrast-[1.2] opacity-80" 
-                  allowFullScreen={true}
-                  loading="lazy" 
-                  title="Anytime Fitness Sikandrabad Map Location"
-                />
-              </div>
-
-              {/* Physical Info Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#121212] border border-neutral-900 p-6">
-                <div className="space-y-3">
-                  <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">Gym Location</h4>
-                  <p className="text-sm text-neutral-400 leading-relaxed font-sans">
-                    Anytime Fitness Sikandrabad, <br />
-                    Sirodhan Road, <br />
-                    Sikandrabad, Bulandshahr, <br />
-                    Uttar Pradesh
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-bebas text-lg text-white font-bold tracking-wide uppercase">Call / WhatsApp</h4>
-                    {/* TODO: Replace with real phone number and WhatsApp link before launch */}
-                    <p className="text-sm text-neutral-400 font-sans">+91 98765 43210</p>
-                  </div>
-                  <div>
-                    {/* TODO: Replace with real phone number and WhatsApp link before launch */}
-                    <a
-                      href="https://wa.me/919876543210?text=Hi!%20I%20am%20interested%20in%20joining%20Anytime%20Fitness%20Sikandrabad"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-none shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.725 1.451 5.436.002 9.852-4.41 9.855-9.852.002-2.636-1.02-5.115-2.879-6.973-1.859-1.859-4.34-2.88-6.98-2.882-5.437 0-9.856 4.417-9.858 9.853-.001 2.062.535 4.075 1.552 5.86l-.99 3.617 3.71-.973zm12.046-6.641c-.268-.134-1.581-.78-1.821-.867-.24-.087-.415-.13-.59.134-.175.263-.676.867-.828 1.04-.152.173-.304.195-.572.061-.268-.134-1.132-.417-2.156-1.331-.797-.711-1.336-1.59-1.492-1.858-.157-.269-.017-.414.118-.548.12-.121.268-.312.402-.469.135-.156.179-.26.269-.434.09-.173.045-.325-.022-.459-.068-.134-.59-1.42-.809-1.947-.213-.515-.446-.445-.61-.453-.158-.007-.339-.009-.52-.009-.181 0-.476.068-.724.339-.249.271-.95.928-.95 2.264 0 1.336.973 2.625 1.109 2.808.136.183 1.914 2.923 4.637 4.101.648.28 1.153.447 1.547.572.651.207 1.243.178 1.71.108.522-.078 1.581-.647 1.802-1.272.222-.625.222-1.161.156-1.272-.066-.111-.24-.175-.508-.309z"/>
-                      </svg>
-                      <span>WhatsApp Info</span>
-                    </a>
-                  </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {history.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-neutral-900/50 border border-neutral-900 text-xs">
+                      <div className="space-y-1 text-left min-w-0 pr-2">
+                        <p className="font-semibold text-neutral-200 truncate">{item.fileName}</p>
+                        <p className="text-[10px] text-neutral-500">{item.toolName} • {item.timestamp}</p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/20 shrink-0">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Saved
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
-
-        </div>
-      </section>
-
+        )}
+      </main>
     </div>
   );
 }

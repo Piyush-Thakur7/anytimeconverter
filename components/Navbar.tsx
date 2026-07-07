@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
 import Logo from './Logo';
 
-export default function Navbar() {
+interface NavbarProps {
+  onSelectTool?: (toolId: string | null) => void;
+}
+
+export default function Navbar({ onSelectTool }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -21,24 +24,22 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'Programs', href: '#programs' },
-    { name: 'Gallery', href: '#gallery' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'Contact', href: '#contact' },
-  ];
-
-  const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
+  const handleNavClick = (toolId: string | null) => {
+    if (onSelectTool) {
+      onSelectTool(toolId);
+    }
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('set-active-tool', { detail: toolId });
+      window.dispatchEvent(event);
+    }
     setIsMobileMenuOpen(false);
     
-    const targetElement = document.querySelector(href);
+    // Smooth scroll back to workspace area
+    const targetElement = document.querySelector('#workspace-area') || document.querySelector('#home');
     if (targetElement) {
-      const offset = 80; // height of the navbar
+      const offset = 80;
       const elementPosition = targetElement.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
-
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
@@ -56,37 +57,56 @@ export default function Navbar() {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo Text & Image */}
-        <a href="#home" onClick={(e) => handleScrollTo(e, '#home')} className="flex items-center space-x-2">
-          <Logo className="h-9 sm:h-12 md:h-14 w-auto" />
-          <span className="font-bebas text-base min-[380px]:text-xl sm:text-2xl tracking-wider min-[380px]:tracking-widest text-white font-bold hover:text-accent transition-colors">
-            ANYTIME FITNESS
+        <button 
+          onClick={() => handleNavClick(null)}
+          className="flex items-center space-x-2 bg-transparent border-none cursor-pointer text-left focus:outline-none"
+        >
+          <Logo className="h-8 sm:h-10 w-auto" />
+          <span className="font-bebas text-lg sm:text-2xl tracking-wider text-white font-bold hover:text-accent transition-colors">
+            FLEXCONVERT
           </span>
-        </a>
+        </button>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => handleScrollTo(e, link.href)}
-              className="text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-            >
-              {link.name}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-            </a>
-          ))}
+          <button
+            onClick={() => handleNavClick(null)}
+            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => handleNavClick('jpg-to-pdf')}
+            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+          >
+            JPG to PDF
+          </button>
+          <button
+            onClick={() => handleNavClick('pdf-to-jpg')}
+            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+          >
+            PDF to JPG
+          </button>
+          <button
+            onClick={() => handleNavClick('merge-pdf')}
+            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+          >
+            Merge PDF
+          </button>
+          <button
+            onClick={() => handleNavClick('image-rescaler')}
+            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
+          >
+            Image Rescale
+          </button>
         </nav>
 
-        {/* Action Button */}
+        {/* Action Button: Privacy Guarantee Badge */}
         <div className="hidden md:block">
-          <a
-            href="#contact"
-            onClick={(e) => handleScrollTo(e, '#contact')}
-            className="bg-accent hover:bg-red-700 text-white font-bebas text-lg px-6 py-2 rounded-none tracking-widest uppercase transition-all duration-300 red-glow-hover transform hover:-translate-y-0.5"
-          >
-            Join Now
-          </a>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            100% Client-Side Privacy
+          </span>
         </div>
 
         {/* Mobile Hamburger menu */}
@@ -113,25 +133,42 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-[#0a0a0a] border-t border-neutral-900 py-4 px-6 space-y-4 shadow-xl">
           <nav className="flex flex-col space-y-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={(e) => handleScrollTo(e, link.href)}
-                className="text-base font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-              >
-                {link.name}
-              </a>
-            ))}
-          </nav>
-          <div className="pt-4 border-t border-neutral-950">
-            <a
-              href="#contact"
-              onClick={(e) => handleScrollTo(e, '#contact')}
-              className="block text-center bg-accent hover:bg-red-700 text-white font-bebas text-lg py-3 tracking-widest uppercase transition-all"
+            <button
+              onClick={() => handleNavClick(null)}
+              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
             >
-              Join Now
-            </a>
+              Dashboard
+            </button>
+            <button
+              onClick={() => handleNavClick('jpg-to-pdf')}
+              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
+            >
+              JPG to PDF
+            </button>
+            <button
+              onClick={() => handleNavClick('pdf-to-jpg')}
+              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
+            >
+              PDF to JPG
+            </button>
+            <button
+              onClick={() => handleNavClick('merge-pdf')}
+              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
+            >
+              Merge PDF
+            </button>
+            <button
+              onClick={() => handleNavClick('image-rescaler')}
+              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
+            >
+              Image Rescale
+            </button>
+          </nav>
+          <div className="pt-4 border-t border-neutral-900 flex justify-center">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              100% Client-Side Privacy
+            </span>
           </div>
         </div>
       )}

@@ -3,7 +3,6 @@ import { Bebas_Neue, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 const bebasNeue = Bebas_Neue({
   weight: "400",
@@ -19,21 +18,24 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad, Bulandshahr",
-  description: "Your Transformation Starts Here. Anytime Fitness Sikandrabad is a high-end gym equipped with premium strength training and cardio machinery, certified personal trainers, and customized transformation programs.",
+  title: "FlexConvert | Universal Offline File Converter",
+  description: "Convert and process files 100% locally in your browser. Convert JPG to PDF, PDF to JPG, Merge/Split PDFs, resize images, and convert Word/Text formats with absolute privacy.",
   keywords: [
-    "Anytime Fitness Sikandrabad", 
-    "Best gym in Sikandrabad", 
-    "Gyms in Sikandrabad", 
-    "Bulandshahr fitness center", 
-    "Personal training Sikandrabad",
-    "Weight loss program Sikandrabad"
+    "file converter",
+    "pdf to jpg",
+    "jpg to pdf",
+    "merge pdf",
+    "split pdf",
+    "image resizer",
+    "word to pdf",
+    "local converter",
+    "private converter"
   ],
   openGraph: {
-    title: "Anytime Fitness Sikandrabad | Best Gym in Sikandrabad",
-    description: "Your Transformation Starts Here. Train hard, stay strong with elite equipment and expert trainers.",
+    title: "FlexConvert | Universal Client-Side File Converter",
+    description: "Privacy-first local file conversion suite. No uploads, no limits, instant conversions.",
     type: "website",
-    locale: "en_IN",
+    locale: "en_US",
   },
 };
 
@@ -53,7 +55,6 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
-        <FloatingWhatsApp />
       </body>
     </html>
   );
