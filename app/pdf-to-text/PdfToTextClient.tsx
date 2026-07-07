@@ -7,7 +7,7 @@ import { addHistoryItem } from '@/lib/history';
 let pdfjsLib: any = null;
 if (typeof window !== 'undefined') {
   pdfjsLib = require('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/assets/pdf.worker.min.mjs';
 }
 
 export default function PdfToTextClient() {
