@@ -37,7 +37,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg sm:text-xl font-bold text-foreground">1. Acceptance of Terms</h2>
           <p>
-            By accessing and using AnytimeConverter ("we," "our," "us"), you agree to abide by these Terms & Conditions. If you do not agree to these terms, please discontinue use of our services.
+            By accessing and using AnytimeConverter (&quot;we,&quot; &quot;our,&quot; &quot;us&quot;), you agree to abide by these Terms & Conditions. If you do not agree to these terms, please discontinue use of our services.
           </p>
         </section>
 
@@ -58,7 +58,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-lg sm:text-xl font-bold text-foreground">4. Disclaimers & Limitation of Liability</h2>
           <p>
-            The services and output files are provided **"as is" and "as available," without warranties of any kind**, either express or implied, including but not limited to warranties of accuracy, performance, or suitability for a specific purpose.
+            The services and output files are provided <strong>&quot;as is&quot; and &quot;as available,&quot; without warranties of any kind</strong>, either express or implied, including but not limited to warranties of accuracy, performance, or suitability for a specific purpose.
           </p>
           <p>
             We do not guarantee that the conversion output will precisely reflect the layout, fonts, or styling of the original file. Under no circumstances shall AnytimeConverter be liable for any direct, indirect, incidental, or consequential damages (including data loss or document formatting degradation). We recommend keeping original backups of all files.

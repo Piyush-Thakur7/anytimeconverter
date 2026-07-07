@@ -37,7 +37,7 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-lg sm:text-xl font-bold text-foreground">1. 100% Client-Side Processing Guarantee</h2>
           <p>
-            At AnytimeConverter, your privacy is our primary concern. Unlike traditional online converters that upload your documents to external servers, **all file conversion, merging, splitting, and compression happens entirely in your browser using local WebAssembly (WASM) and JavaScript libraries.**
+            At AnytimeConverter, your privacy is our primary concern. Unlike traditional online converters that upload your documents to external servers, <strong>all file conversion, merging, splitting, and compression happens entirely in your browser using local WebAssembly (WASM) and JavaScript libraries.</strong>
           </p>
           <p>
             Your files (PDFs, Word documents, images, text, and presentation files) are never uploaded, transmitted, or stored on any server. The processing occurs inside your device's memory sandbox and vanishes immediately when you close the tab.
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-lg sm:text-xl font-bold text-foreground">3. Local Storage (localStorage)</h2>
           <p>
-            Our "Recent Local Conversions" history panel uses your browser's native `localStorage` to keep a list of files you converted. This log stays exclusively on your device, is never transmitted to us or any third party, and can be cleared at any time by clicking the "Clear history" button on the homepage.
+            Our &quot;Recent Local Conversions&quot; history panel uses your browser's native <code>localStorage</code> to keep a list of files you converted. This log stays exclusively on your device, is never transmitted to us or any third party, and can be cleared at any time by clicking the &quot;Clear history&quot; button on the homepage.
           </p>
         </section>
 
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           <h2 className="text-lg sm:text-xl font-bold text-foreground">5. Contact Information</h2>
           <p>
             If you have questions regarding this policy or the browser-local security mechanisms of our file tools, please contact us via email at:
-            <span className="text-accent hover:underline ml-1 cursor-pointer">support@resence.in</span>.
+            <span className="text-accent hover:underline ml-1 cursor-pointer font-bold">support@resence.in</span>.
           </p>
         </section>
       </div>
