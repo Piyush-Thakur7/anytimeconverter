@@ -137,7 +137,7 @@ export default function AnytimeConverterHub() {
             100% Client-Side Privacy
           </span>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-none">
-            Universal Offline File Converter
+            Convert your files. Instantly. Privately.
           </h1>
           <p className="max-w-2xl mx-auto text-sm sm:text-base text-foreground/70 leading-relaxed font-medium">
             Convert, merge, split, and compress your files directly in your browser. 
