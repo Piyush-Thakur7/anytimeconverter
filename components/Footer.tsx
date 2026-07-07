@@ -29,10 +29,13 @@ export default function Footer() {
           
           {/* Logo & Privacy Pitch */}
           <div className="md:col-span-2 flex flex-col space-y-4 items-start">
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2.5">
               <Logo className="h-8 w-auto" isFooter={true} />
               <span className="text-lg font-bold text-foreground">
                 AnytimeConverter
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-accent-bg text-accent border border-accent/15">
+                Secure WASM Engine
               </span>
             </div>
             <p className="text-xs sm:text-sm leading-relaxed max-w-md text-foreground/70">
@@ -75,11 +78,10 @@ export default function Footer() {
         {/* Footer Bottom Bar */}
         <div className="pt-6 border-t border-card-border flex flex-col md:flex-row items-center justify-between text-xs text-foreground/50">
           <p>&copy; {currentYear} AnytimeConverter. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0 font-medium">
+          <div className="flex items-center space-x-4 mt-4 md:mt-0 font-medium">
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</Link>
             <span className="text-card-border">|</span>
-            <span className="text-foreground/40">Secure WebAssembly Engine</span>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</Link>
           </div>
         </div>
       </div>
