@@ -20,6 +20,7 @@ export default function Footer() {
     { name: 'Image Rescaler', href: '/image-converter' },
     { name: 'Convert PNG to WebP', href: '/image-converter' },
     { name: 'Convert JPG to PNG', href: '/image-converter' },
+    { name: 'File Compressor', href: '/compress-file' },
   ];
 
   return (
@@ -59,9 +60,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Image Tools SEO column */}
+          {/* Image & File Tools SEO column */}
           <div className="flex flex-col space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Image Utilities</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Image & File Utilities</h3>
             <ul className="space-y-1.5 text-xs">
               {imageTools.map((tool) => (
                 <li key={tool.name}>

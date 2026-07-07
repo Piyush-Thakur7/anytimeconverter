@@ -123,6 +123,17 @@ export default function AnytimeConverterHub() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
       )
+    },
+    {
+      id: 'compress-file',
+      name: 'File Compressor',
+      description: 'Reduce the file size of any document, image, or media files by compressing them into a secure ZIP archive.',
+      href: '/compress-file',
+      icon: (
+        <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      )
     }
   ];
 
@@ -190,13 +201,13 @@ export default function AnytimeConverterHub() {
           </div>
         </section>
 
-        {/* Image Tools Category */}
+        {/* Image & File Tools Category */}
         <section id="image-tools" className="space-y-6">
           <div className="border-b border-card-border pb-3">
             <h2 className="text-xl font-bold tracking-tight text-foreground">
-              Image Utilities
+              Image & File Utilities
             </h2>
-            <p className="text-xs text-foreground/50 mt-0.5 font-medium">Optimize and transform images entirely inside your browser cache.</p>
+            <p className="text-xs text-foreground/50 mt-0.5 font-medium">Optimize, rescale, and compress images and files completely inside your browser cache.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
