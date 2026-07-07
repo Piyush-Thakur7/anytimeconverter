@@ -512,17 +512,30 @@ export function resizeImage(
         // Export to Blob
         const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
         
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Canvas export to blob failed'));
-            }
-          },
-          mimeType,
-          format === 'png' ? undefined : quality / 100
-        );
+        if (format === 'png') {
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Canvas export to blob failed'));
+              }
+            },
+            'image/png'
+          );
+        } else {
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Canvas export to blob failed'));
+              }
+            },
+            mimeType,
+            quality / 100
+          );
+        }
       };
       
       img.onerror = () => reject(new Error('Failed to load image file'));

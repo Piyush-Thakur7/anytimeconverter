@@ -129,7 +129,7 @@ export default function ImageConverterClient() {
       );
       setProgress(90);
 
-      const outName = `rescaled_${uploadedImages[0].name.replace(/\.[^/.]+$/, '')}.${imageFormat}`;
+      const outName = `rescaled_${uploadedImages[0].name.replace(/\.[^/.]+$/, '')}.${imageFormat === 'jpeg' ? 'jpg' : imageFormat}`;
       setProgress(100);
       setDownloadBlob(resBlob);
       setDownloadName(outName);
