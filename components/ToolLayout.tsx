@@ -19,6 +19,7 @@ interface ToolLayoutProps {
   onClear: () => void;
   onConvert: () => void;
   onDownload: () => void;
+  onRemoveFile?: (index: number) => void;
   children?: React.ReactNode; // Settings inputs slot
 }
 
@@ -38,6 +39,7 @@ export default function ToolLayout({
   onClear,
   onConvert,
   onDownload,
+  onRemoveFile,
   children
 }: ToolLayoutProps) {
   const [isDragActive, setIsDragActive] = useState(false);
@@ -74,6 +76,16 @@ export default function ToolLayout({
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Hidden file input always available */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept={accept}
+        multiple={multiple}
+        className="hidden"
+      />
+
       {/* Back to Home Button */}
       <Link
         href="/"
@@ -103,15 +115,19 @@ export default function ToolLayout({
         </div>
       </div>
 
-      {/* Reusable Workspace Block */}
-      <div className="bg-card border border-card-border rounded-xl p-6 sm:p-8 shadow-sm">
+      {/* Reusable Workspace Block with drag and drop overlay support even when loaded */}
+      <div 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`bg-card border rounded-xl p-6 sm:p-8 shadow-sm transition-colors ${
+          isDragActive && multiple ? 'border-accent bg-accent-bg/10' : 'border-card-border'
+        }`}
+      >
         
         {/* Upload Zone */}
         {!hasFiles ? (
           <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             onClick={triggerFileSelect}
             className={`border-2 border-dashed rounded-lg p-10 sm:p-14 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-4 ${
               isDragActive 
@@ -119,15 +135,6 @@ export default function ToolLayout({
                 : 'border-card-border hover:border-accent bg-background-subtle/50 hover:bg-background-subtle'
             }`}
           >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept={accept}
-              multiple={multiple}
-              className="hidden"
-            />
-            
             {/* Lock Security Indicator */}
             <div className="p-3 rounded-full bg-accent-bg text-accent">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -167,9 +174,20 @@ export default function ToolLayout({
                         <img src={img.dataUrl} className="w-8 h-8 object-cover rounded border border-card-border" alt="preview" />
                         <span className="truncate font-semibold">{img.name}</span>
                       </div>
-                      {img.width && img.height && (
-                        <span className="text-foreground/50 shrink-0 font-medium">{img.width}x{img.height} px</span>
-                      )}
+                      <div className="flex items-center space-x-2 shrink-0">
+                        {img.width && img.height && (
+                          <span className="text-foreground/50 shrink-0 font-medium">{img.width}x{img.height} px</span>
+                        )}
+                        {onRemoveFile && (
+                          <button
+                            onClick={() => onRemoveFile(i)}
+                            className="text-red-500 hover:text-red-700 font-bold px-1.5 text-sm cursor-pointer"
+                            title="Remove file"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -181,13 +199,34 @@ export default function ToolLayout({
                         </svg>
                         <span className="truncate font-semibold">{file.name}</span>
                       </div>
-                      <span className="text-foreground/50 font-medium shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+                      <div className="flex items-center space-x-2 shrink-0 font-medium">
+                        <span className="text-foreground/50">{(file.size / 1024).toFixed(1)} KB</span>
+                        {onRemoveFile && (
+                          <button
+                            onClick={() => onRemoveFile(i)}
+                            className="text-red-500 hover:text-red-700 font-bold px-1.5 text-sm cursor-pointer"
+                            title="Remove file"
+                          >
+                            &times;
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))
                 )}
               </div>
               
-              <div className="flex justify-end pt-2">
+              <div className="flex items-center justify-between pt-3 mt-1 border-t border-card-border/50">
+                {multiple ? (
+                  <button
+                    onClick={triggerFileSelect}
+                    className="inline-flex items-center space-x-1 text-xs font-bold text-accent hover:underline cursor-pointer"
+                  >
+                    <span>+ Add Files</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
                 <button
                   onClick={onClear}
                   className="text-[10px] uppercase tracking-wider font-bold text-foreground/50 hover:text-accent cursor-pointer"
@@ -218,52 +257,52 @@ export default function ToolLayout({
             {/* Progress / Converting display */}
             {isProcessing && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-foreground/70">
-                  <span className="font-semibold">Processing files locally...</span>
-                  <span className="font-bold text-accent">{progress}%</span>
+                <div className="flex justify-between items-center text-xs font-semibold text-foreground/80">
+                  <span>Processing conversion offline...</span>
+                  <span>{progress}%</span>
                 </div>
-                <div className="w-full bg-background-subtle border border-card-border rounded-full h-2 overflow-hidden">
-                  <div 
-                    className="bg-accent h-2 rounded-full transition-all duration-300"
+                <div className="w-full bg-background-subtle h-2 rounded-full overflow-hidden border border-card-border">
+                  <div
+                    className="bg-accent h-full transition-all duration-300 rounded-full"
                     style={{ width: `${progress}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
             )}
 
-            {/* Success / Download block */}
+            {/* Success display & Download */}
             {success && (
-              <div className="p-4 bg-accent-bg text-accent text-xs rounded border border-accent/25 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
-                <div className="flex items-center space-x-2 text-left">
-                  <svg className="w-5 h-5 shrink-0 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <div className="p-4 rounded-lg bg-accent-bg border border-accent/15 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center space-x-3 text-left">
+                  <span className="p-2 rounded-full bg-accent/15 text-accent">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </span>
                   <div>
-                    <p className="font-bold text-foreground">File Ready for Download!</p>
-                    <p className="text-[10px] text-foreground/75 mt-0.5">Filename: <span className="font-semibold text-accent">{downloadName}</span></p>
+                    <h3 className="text-sm font-bold text-foreground">Conversion Successful!</h3>
+                    <p className="text-xs text-foreground/60 font-semibold truncate max-w-xs sm:max-w-sm">{downloadName}</p>
                   </div>
                 </div>
-                
                 <button
                   onClick={onDownload}
-                  className="w-full sm:w-auto bg-accent hover:bg-accent-hover text-white font-bold px-5 py-2.5 rounded text-xs transition-colors shadow-sm flex items-center justify-center space-x-1 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-accent text-white font-bold text-xs hover:bg-accent-hover transition-colors shadow-sm cursor-pointer"
                 >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  <span>Download File</span>
+                  Download File
                 </button>
               </div>
             )}
 
-            {/* Action buttons */}
-            {!isProcessing && !success && (
-              <button
-                onClick={onConvert}
-                className="w-full py-3 bg-accent hover:bg-accent-hover text-white font-bold rounded-lg text-sm transition-all shadow-sm cursor-pointer"
-              >
-                Convert Now
-              </button>
+            {/* Main Action trigger */}
+            {!success && !isProcessing && (
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={onConvert}
+                  className="w-full sm:w-auto px-6 py-3 rounded-lg bg-accent text-white font-bold text-sm hover:bg-accent-hover transition-colors shadow cursor-pointer"
+                >
+                  Convert Now
+                </button>
+              </div>
             )}
           </div>
         )}

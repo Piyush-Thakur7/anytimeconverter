@@ -25,7 +25,7 @@ export default function MergePdfClient() {
       return;
     }
 
-    // Append to existing list if multiple files selected
+    // Append to existing list
     setUploadedFiles(prev => [...prev, ...pdfFiles]);
   };
 
@@ -36,6 +36,27 @@ export default function MergePdfClient() {
     setDownloadBlob(null);
     setDownloadName('');
     setProgress(0);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setSuccess(false);
+    setDownloadBlob(null);
+  };
+
+  const handleMoveFile = (idx: number, direction: 'up' | 'down') => {
+    const nextList = [...uploadedFiles];
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= nextList.length) return;
+    
+    // Swap
+    const temp = nextList[idx];
+    nextList[idx] = nextList[targetIdx];
+    nextList[targetIdx] = temp;
+    
+    setUploadedFiles(nextList);
+    setSuccess(false);
+    setDownloadBlob(null);
   };
 
   const handleConvert = async () => {
@@ -96,7 +117,42 @@ export default function MergePdfClient() {
         onClear={handleClear}
         onConvert={handleConvert}
         onDownload={handleDownload}
-      />
+        onRemoveFile={handleRemoveFile}
+      >
+        {uploadedFiles.length > 1 && (
+          <div className="space-y-2 text-left">
+            <label className="text-xs font-bold text-foreground/75 block border-b border-card-border pb-1 mb-2">
+              Arrange Merge Sequence
+            </label>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {uploadedFiles.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded bg-card border border-card-border text-xs">
+                  <span className="truncate font-semibold text-foreground">{idx + 1}. {file.name}</span>
+                  <div className="flex items-center space-x-1 shrink-0">
+                    <button
+                      onClick={() => handleMoveFile(idx, 'up')}
+                      disabled={idx === 0}
+                      className="p-1 px-2 bg-accent text-white text-[10px] font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                      title="Move Up"
+                    >
+                      &uarr;
+                    </button>
+                    <button
+                      onClick={() => handleMoveFile(idx, 'down')}
+                      disabled={idx === uploadedFiles.length - 1}
+                      className="p-1 px-2 bg-accent text-white text-[10px] font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                      title="Move Down"
+                    >
+                      &darr;
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-foreground/50 pt-0.5">Use the arrows to adjust the sequence of documents before merging.</p>
+          </div>
+        )}
+      </ToolLayout>
     </main>
   );
 }

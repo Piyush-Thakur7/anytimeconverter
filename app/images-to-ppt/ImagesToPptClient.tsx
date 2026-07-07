@@ -67,8 +67,8 @@ export default function ImagesToPptClient() {
       }
     }
 
-    setUploadedFiles(imgFiles);
-    setUploadedImages(loadedImages);
+    setUploadedFiles(prev => [...prev, ...imgFiles]);
+    setUploadedImages(prev => [...prev, ...loadedImages]);
     setIsProcessing(false);
   };
 
@@ -82,6 +82,13 @@ export default function ImagesToPptClient() {
     setProgress(0);
   };
 
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    setSuccess(false);
+    setDownloadBlob(null);
+  };
+
   const handleMoveImage = (index: number, direction: 'left' | 'right') => {
     const targetIndex = direction === 'left' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= uploadedImages.length) return;
@@ -92,6 +99,8 @@ export default function ImagesToPptClient() {
     updated[targetIndex] = temp;
     
     setUploadedImages(updated);
+    setSuccess(false);
+    setDownloadBlob(null);
   };
 
   const handleConvert = async () => {
@@ -156,6 +165,7 @@ export default function ImagesToPptClient() {
         onClear={handleClear}
         onConvert={handleConvert}
         onDownload={handleDownload}
+        onRemoveFile={handleRemoveFile}
       >
         {/* Custom Settings Config */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
