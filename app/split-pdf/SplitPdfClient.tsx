@@ -87,7 +87,7 @@ export default function SplitPdfClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Split PDF Pages Free"
+        title="Split PDF pages online — free and private"
         description="Extract specific pages or custom page ranges from your PDF document into a new file. Runs entirely locally in your browser for maximum privacy."
         accept=".pdf"
         multiple={false}

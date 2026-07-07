@@ -119,7 +119,7 @@ export default function PdfToJpgClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Extract Pages of PDF to Images Online"
+        title="Convert PDF to JPG online — free and private"
         description="Convert your PDF document into high-quality JPEG images instantly. View page previews and download individual sheets or grab all pages in a single ZIP."
         accept=".pdf"
         multiple={false}

@@ -158,7 +158,7 @@ export default function ImageConverterClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Resize & Convert Images Online Free"
+        title="Resize and convert images online — free and private"
         description="Rescale image bounds, adjust compression quality, and swap between PNG, JPEG, and WebP formats. Processed completely in-browser without sending photos online."
         accept="image/*"
         multiple={false}

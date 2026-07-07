@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import JpgToPdfClient from './JpgToPdfClient';
 
 export const metadata: Metadata = {
-  title: "Convert JPG to PDF No Signup | Free Image to PDF Online",
-  description: "Combine and convert images (JPG, PNG, WebP) into a single PDF document 100% locally in your browser. No file size limits, no uploads, total privacy.",
-  keywords: [
-    "jpg to pdf converter free",
-    "convert jpg to pdf no signup",
-    "combine images to pdf online",
-    "local image to pdf",
-    "png to pdf online free"
-  ],
+  title: "JPG to PDF Converter — Free, No Signup | AnytimeConverter",
+  description: "Convert JPG images to PDF instantly in your browser. No upload, no signup, no watermark. 100% private and free.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/jpg-to-pdf",
+  },
   openGraph: {
-    title: "Convert JPG to PDF No Signup | AnytimeConverter",
-    description: "Combine and convert images locally. Files never leave your device. Instant and 100% free.",
+    title: "JPG to PDF Converter — Free, No Signup | AnytimeConverter",
+    description: "Convert JPG images to PDF instantly in your browser. No upload, no signup, no watermark. 100% private and free.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/jpg-to-pdf",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JPG to PDF Converter — Free, No Signup | AnytimeConverter",
+    description: "Convert JPG images to PDF instantly in your browser. No upload, no signup, no watermark. 100% private and free.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

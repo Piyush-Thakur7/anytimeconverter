@@ -4,7 +4,22 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: "AnytimeConverter Blog | Document Processing & Security Tips",
   description: "Read articles about secure file conversion, PDF management, WebAssembly local processing, and data privacy tips.",
-  keywords: ["pdf tips", "data privacy online", "convert files locally", "anytimeconverter blog"]
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/blog",
+  },
+  openGraph: {
+    title: "AnytimeConverter Blog | Document Processing & Security Tips",
+    description: "Read articles about secure file conversion, PDF management, WebAssembly local processing, and data privacy tips.",
+    type: "website",
+    url: "https://anytimeconverter.resence.in/blog",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AnytimeConverter Blog | Document Processing & Security Tips",
+    description: "Read articles about secure file conversion, PDF management, WebAssembly local processing, and data privacy tips.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  }
 };
 
 export default function BlogPage() {

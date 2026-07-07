@@ -85,7 +85,7 @@ export default function WordToPdfClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Convert Word to PDF Free Online"
+        title="Convert Word to PDF online — free and private"
         description="Convert your Microsoft Word (.docx) or plain text (.txt) files into clean, readable PDF documents. Completely client-side — your document contents never touch a server."
         accept=".docx,.txt"
         multiple={false}

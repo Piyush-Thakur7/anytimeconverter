@@ -531,3 +531,44 @@ export function resizeImage(
     reader.onerror = () => reject(new Error('Failed to read image file'));
   });
 }
+
+/**
+ * Convert a list of images to a PowerPoint presentation (.pptx), one image per slide.
+ */
+export async function imagesToPpt(
+  images: { name: string; dataUrl: string; width: number; height: number }[],
+  options: { orientation: '16x9' | '4x3'; fitMode: 'contain' | 'cover' }
+): Promise<Blob> {
+  const pptx = new pptxgen();
+  
+  // Set layout
+  pptx.layout = options.orientation === '4x3' ? 'LAYOUT_4x3' : 'LAYOUT_16x9';
+  
+  // Slide dimensions in inches:
+  // 16:9 -> 10 x 5.625 inches
+  // 4:3 -> 10 x 7.5 inches
+  const slideWidth = 10;
+  const slideHeight = options.orientation === '4x3' ? 7.5 : 5.625;
+
+  for (const img of images) {
+    const slide = pptx.addSlide();
+    slide.background = { fill: 'FFFFFF' }; // White background for clean look
+    
+    slide.addImage({
+      data: img.dataUrl,
+      x: 0,
+      y: 0,
+      w: slideWidth,
+      h: slideHeight,
+      sizing: {
+        type: options.fitMode,
+        w: slideWidth,
+        h: slideHeight
+      }
+    });
+  }
+
+  const blob = await pptx.write({ outputType: 'blob' }) as Blob;
+  return blob;
+}
+

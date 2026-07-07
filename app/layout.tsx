@@ -13,6 +13,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AnytimeConverter | Free 100% Local File Converter",
   description: "Convert and modify files locally in your browser. No file size limits, no signups, no uploads. Convert JPG to PDF, PDF to JPG, Merge PDFs, and resize images offline.",
+  metadataBase: new URL("https://anytimeconverter.resence.in"),
   keywords: [
     "file converter",
     "pdf to jpg converter free",
@@ -22,12 +23,31 @@ export const metadata: Metadata = {
     "convert docx to pdf",
     "offline file converter"
   ],
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in",
+  },
   openGraph: {
-    title: "AnytimeConverter | Free Local File Converter",
-    description: "Privacy-first local file conversion suite. No uploads, no limits, instant conversions.",
+    title: "AnytimeConverter | Free 100% Local File Converter",
+    description: "Convert and modify files locally in your browser. No file size limits, no signups, no uploads. Convert JPG to PDF, PDF to JPG, Merge PDFs, and resize images offline.",
     type: "website",
     locale: "en_US",
+    url: "https://anytimeconverter.resence.in",
+    siteName: "AnytimeConverter",
+    images: [
+      {
+        url: "https://anytimeconverter.resence.in/assets/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "AnytimeConverter - 100% Local Offline File Converter",
+      }
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "AnytimeConverter | Free 100% Local File Converter",
+    description: "Convert and modify files locally in your browser. No file size limits, no signups, no uploads. Convert JPG to PDF, PDF to JPG, Merge PDFs, and resize images offline.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  }
 };
 
 export default function RootLayout({

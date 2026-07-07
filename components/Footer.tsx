@@ -16,6 +16,7 @@ export default function Footer() {
   ];
 
   const imageTools = [
+    { name: 'Images to PPTX Converter', href: '/images-to-ppt' },
     { name: 'Image Rescaler', href: '/image-converter' },
     { name: 'Convert PNG to WebP', href: '/image-converter' },
     { name: 'Convert JPG to PNG', href: '/image-converter' },
@@ -75,8 +76,8 @@ export default function Footer() {
         <div className="pt-6 border-t border-card-border flex flex-col md:flex-row items-center justify-between text-xs text-foreground/50">
           <p>&copy; {currentYear} AnytimeConverter. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0 font-medium">
-            <span className="hover:text-foreground cursor-default transition-colors">Privacy Policy</span>
-            <span className="hover:text-foreground cursor-default transition-colors">Terms of Service</span>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms & Conditions</Link>
             <span className="text-card-border">|</span>
             <span className="text-foreground/40">Secure WebAssembly Engine</span>
           </div>

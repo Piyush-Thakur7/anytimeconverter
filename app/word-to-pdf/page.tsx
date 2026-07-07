@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import WordToPdfClient from './WordToPdfClient';
 
 export const metadata: Metadata = {
-  title: "Convert Word to PDF Free Online | DOCX to PDF",
-  description: "Convert your Microsoft Word (.docx) or Text (.txt) files into clean, readable PDF documents 100% locally in your browser. Free, private, no file uploads.",
-  keywords: [
-    "convert docx to pdf free",
-    "word to pdf converter offline",
-    "docx to pdf browser converter",
-    "convert text files to pdf free",
-    "unlimited word to pdf tool"
-  ],
+  title: "Word to PDF Converter — Free, No Signup | AnytimeConverter",
+  description: "Convert Microsoft Word (.docx) or Text (.txt) files into clean, formatted PDFs locally in your browser. No signups, no document uploads.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/word-to-pdf",
+  },
   openGraph: {
-    title: "Convert Word to PDF Free Online | AnytimeConverter",
-    description: "Convert Word documents to PDFs locally in your browser. Files never leave your device. 100% free.",
+    title: "Word to PDF Converter — Free, No Signup | AnytimeConverter",
+    description: "Convert Microsoft Word (.docx) or Text (.txt) files into clean, formatted PDFs locally in your browser. No signups, no document uploads.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/word-to-pdf",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Word to PDF Converter — Free, No Signup | AnytimeConverter",
+    description: "Convert Microsoft Word (.docx) or Text (.txt) files into clean, formatted PDFs locally in your browser. No signups, no document uploads.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

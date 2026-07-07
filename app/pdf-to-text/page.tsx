@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import PdfToTextClient from './PdfToTextClient';
 
 export const metadata: Metadata = {
-  title: "Extract Text From PDF Free Online | PDF to Text",
-  description: "Extract raw text from PDF files 100% locally in your browser. Copy text contents directly or download as a TXT file safely.",
-  keywords: [
-    "extract text from pdf free",
-    "pdf to txt converter online",
-    "pdf text extractor offline",
-    "read text from pdf free",
-    "local pdf to text converter"
-  ],
+  title: "Extract Text from PDF — Free, No Signup | AnytimeConverter",
+  description: "Extract raw text content from any PDF file 100% locally in your browser. Copy text directly or download as a TXT file safely.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/pdf-to-text",
+  },
   openGraph: {
-    title: "Extract Text From PDF Free Online | AnytimeConverter",
-    description: "Extract text from PDFs locally in your browser. Files never leave your device. 100% free.",
+    title: "Extract Text from PDF — Free, No Signup | AnytimeConverter",
+    description: "Extract raw text content from any PDF file 100% locally in your browser. Copy text directly or download as a TXT file safely.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/pdf-to-text",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Extract Text from PDF — Free, No Signup | AnytimeConverter",
+    description: "Extract raw text content from any PDF file 100% locally in your browser. Copy text directly or download as a TXT file safely.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

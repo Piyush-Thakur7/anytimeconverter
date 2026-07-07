@@ -128,7 +128,7 @@ export default function JpgToPdfClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Convert JPG to PDF No Signup"
+        title="Convert JPG to PDF online — free and private"
         description="Combine and convert your images (JPG, PNG, WebP) into a high-quality PDF document instantly. All conversions run locally inside your browser for total privacy."
         accept="image/*"
         multiple={true}

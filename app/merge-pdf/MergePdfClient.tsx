@@ -82,7 +82,7 @@ export default function MergePdfClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Merge PDF Files Free"
+        title="Merge PDF files online — free and private"
         description="Combine two or more PDF documents into a single PDF file instantly. No file uploads, no page limits, and 100% private local execution."
         accept=".pdf"
         multiple={true}

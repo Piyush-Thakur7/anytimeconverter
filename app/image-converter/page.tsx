@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import ImageConverterClient from './ImageConverterClient';
 
 export const metadata: Metadata = {
-  title: "Resize & Convert Images Online Free | Image Rescaler",
-  description: "Resize, compress, and convert images (PNG, JPG, WebP) 100% locally in your browser. Free, private, no registration, no watermarks.",
-  keywords: [
-    "resize image online free",
-    "convert png to webp",
-    "image size rescaler",
-    "jpeg compressor offline",
-    "png to jpg converter free"
-  ],
+  title: "Image Rescaler & Converter — Free, No Signup | AnytimeConverter",
+  description: "Resize image dimensions, lock aspect ratio, adjust quality, and convert between PNG, JPG, and WebP format locally and privately.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/image-converter",
+  },
   openGraph: {
-    title: "Resize & Convert Images Online Free | AnytimeConverter",
-    description: "Resize and compress images locally in your browser. Files never leave your device. 100% free.",
+    title: "Image Rescaler & Converter — Free, No Signup | AnytimeConverter",
+    description: "Resize image dimensions, lock aspect ratio, adjust quality, and convert between PNG, JPG, and WebP format locally and privately.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/image-converter",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Image Rescaler & Converter — Free, No Signup | AnytimeConverter",
+    description: "Resize image dimensions, lock aspect ratio, adjust quality, and convert between PNG, JPG, and WebP format locally and privately.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import SplitPdfClient from './SplitPdfClient';
 
 export const metadata: Metadata = {
-  title: "Split PDF Pages Free | Extract Pages From PDF Online",
-  description: "Extract specific pages or page ranges from a PDF document 100% locally. Free, private, no file size limitations, no signups.",
-  keywords: [
-    "split pdf pages free",
-    "extract pages from pdf online",
-    "split pdf offline browser",
-    "extract pdf sheets free",
-    "unlimited pdf splitter"
-  ],
+  title: "Split PDF Pages — Free, No Signup | AnytimeConverter",
+  description: "Extract specific pages or custom page ranges from your PDF document 100% locally. Free, private, no size limits, no signups.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/split-pdf",
+  },
   openGraph: {
-    title: "Split PDF Pages Free | AnytimeConverter",
-    description: "Extract specific pages from PDFs locally in your browser. Files never leave your device. 100% free.",
+    title: "Split PDF Pages — Free, No Signup | AnytimeConverter",
+    description: "Extract specific pages or custom page ranges from your PDF document 100% locally. Free, private, no size limits, no signups.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/split-pdf",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Split PDF Pages — Free, No Signup | AnytimeConverter",
+    description: "Extract specific pages or custom page ranges from your PDF document 100% locally. Free, private, no size limits, no signups.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

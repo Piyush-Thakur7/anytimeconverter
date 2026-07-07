@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import MergePdfClient from './MergePdfClient';
 
 export const metadata: Metadata = {
-  title: "Merge PDF Files Free | Combine PDFs Online",
-  description: "Combine multiple PDF documents into a single PDF file 100% locally. Instant, no page limits, no file uploads, complete privacy.",
-  keywords: [
-    "merge pdf free online",
-    "combine pdf files no upload",
-    "merge pdf offline browser",
-    "join pdf documents free",
-    "unlimited pdf merger"
-  ],
+  title: "Merge PDF Files — Free, No Signup | AnytimeConverter",
+  description: "Combine multiple PDF documents into a single PDF file locally in your browser. Instant, no page limits, no file uploads, complete privacy.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/merge-pdf",
+  },
   openGraph: {
-    title: "Merge PDF Files Free | AnytimeConverter",
-    description: "Combine multiple PDFs locally in your browser. Files never leave your device. 100% free.",
+    title: "Merge PDF Files — Free, No Signup | AnytimeConverter",
+    description: "Combine multiple PDF documents into a single PDF file locally in your browser. Instant, no page limits, no file uploads, complete privacy.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/merge-pdf",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Merge PDF Files — Free, No Signup | AnytimeConverter",
+    description: "Combine multiple PDF documents into a single PDF file locally in your browser. Instant, no page limits, no file uploads, complete privacy.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 

@@ -128,7 +128,7 @@ export default function PdfToTextClient() {
   return (
     <main className="pt-24 pb-12 animate-fade-in">
       <ToolLayout
-        title="Extract Text From PDF Free"
+        title="Extract text from PDF online — free and private"
         description="Extract raw text layout from any PDF document instantly. Runs entirely in your browser to safeguard your sensitive documents. Copy text directly or download as a text file."
         accept=".pdf"
         multiple={false}

@@ -103,6 +103,17 @@ export default function AnytimeConverterHub() {
 
   const imageTools = [
     {
+      id: 'images-to-ppt',
+      name: 'Images to PPTX',
+      description: 'Convert JPG, PNG, and WebP images into a PowerPoint slide presentation locally.',
+      href: '/images-to-ppt',
+      icon: (
+        <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    {
       id: 'image-converter',
       name: 'Image Rescaler',
       description: 'Resize image dimensions, compress file payload size, and convert formats (PNG, JPG, WebP).',

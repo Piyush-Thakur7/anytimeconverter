@@ -2,19 +2,23 @@ import type { Metadata } from 'next';
 import PdfToJpgClient from './PdfToJpgClient';
 
 export const metadata: Metadata = {
-  title: "Convert PDF to JPG Free Online | Extract PDF Pages",
-  description: "Extract pages of a PDF document and convert them into high-quality JPEG images 100% locally. Free, private, no file uploads, no watermarks.",
-  keywords: [
-    "pdf to jpg converter free",
-    "extract pages of pdf to images online",
-    "convert pdf to jpeg offline",
-    "local pdf to image extraction",
-    "pdf page extractor online"
-  ],
+  title: "PDF to JPG Converter — Free, No Signup | AnytimeConverter",
+  description: "Extract pages of your PDF document and convert them into high-quality JPEG images locally. Free, private, no file uploads, no watermarks.",
+  alternates: {
+    canonical: "https://anytimeconverter.resence.in/pdf-to-jpg",
+  },
   openGraph: {
-    title: "Convert PDF to JPG Free Online | AnytimeConverter",
-    description: "Extract PDF pages to JPEG images locally. Files never leave your device. 100% free.",
+    title: "PDF to JPG Converter — Free, No Signup | AnytimeConverter",
+    description: "Extract pages of your PDF document and convert them into high-quality JPEG images locally. Free, private, no file uploads, no watermarks.",
     type: "website",
+    url: "https://anytimeconverter.resence.in/pdf-to-jpg",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PDF to JPG Converter — Free, No Signup | AnytimeConverter",
+    description: "Extract pages of your PDF document and convert them into high-quality JPEG images locally. Free, private, no file uploads, no watermarks.",
+    images: ["https://anytimeconverter.resence.in/assets/og-image.jpg"],
   }
 };
 
