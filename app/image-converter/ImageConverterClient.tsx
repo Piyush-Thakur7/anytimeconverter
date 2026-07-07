@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ToolLayout from '@/components/ToolLayout';
-import { resizeImage } from '@/lib/converterCore';
+import { resizeImage, compressImageToTargetSize } from '@/lib/converterCore';
 import { addHistoryItem } from '@/lib/history';
 
 interface ImageFile {
@@ -22,6 +22,13 @@ export default function ImageConverterClient() {
   const [imageQuality, setImageQuality] = useState(85);
   const [keepAspectRatio, setKeepAspectRatio] = useState(true);
   const [originalSizes, setOriginalSizes] = useState<{ w: number; h: number } | null>(null);
+
+  const [compressToTargetSize, setCompressToTargetSize] = useState(false);
+  const [targetSizeKb, setTargetSizeKb] = useState(200);
+
+  const [actualQualityUsed, setActualQualityUsed] = useState<number | null>(null);
+  const [actualWidthUsed, setActualWidthUsed] = useState<number | null>(null);
+  const [actualHeightUsed, setActualHeightUsed] = useState<number | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -90,6 +97,9 @@ export default function ImageConverterClient() {
     setDownloadName('');
     setProgress(0);
     setOriginalSizes(null);
+    setActualQualityUsed(null);
+    setActualWidthUsed(null);
+    setActualHeightUsed(null);
   };
 
   const handleWidthChange = (val: number) => {
@@ -117,19 +127,40 @@ export default function ImageConverterClient() {
     setIsProcessing(true);
     setProgress(30);
     setErrorMsg('');
+    setSuccess(false);
 
     try {
       setProgress(60);
-      const resBlob = await resizeImage(
-        uploadedImages[0].file,
-        imageWidth,
-        imageHeight,
-        imageQuality,
-        imageFormat
-      );
+      let resBlob: Blob;
+
+      if (compressToTargetSize) {
+        const result = await compressImageToTargetSize(
+          uploadedImages[0].file,
+          imageWidth,
+          imageHeight,
+          targetSizeKb,
+          imageFormat
+        );
+        resBlob = result.blob;
+        setActualQualityUsed(result.qualityUsed);
+        setActualWidthUsed(result.widthUsed);
+        setActualHeightUsed(result.heightUsed);
+      } else {
+        resBlob = await resizeImage(
+          uploadedImages[0].file,
+          imageWidth,
+          imageHeight,
+          imageQuality,
+          imageFormat
+        );
+        setActualQualityUsed(null);
+        setActualWidthUsed(null);
+        setActualHeightUsed(null);
+      }
+
       setProgress(90);
 
-      const outName = `rescaled_${uploadedImages[0].name.replace(/\.[^/.]+$/, '')}.${imageFormat === 'jpeg' ? 'jpg' : imageFormat}`;
+      const outName = `${compressToTargetSize ? 'compressed' : 'rescaled'}_${uploadedImages[0].name.replace(/\.[^/.]+$/, '')}.${imageFormat === 'jpeg' ? 'jpg' : imageFormat}`;
       setProgress(100);
       setDownloadBlob(resBlob);
       setDownloadName(outName);
@@ -234,24 +265,92 @@ export default function ImageConverterClient() {
               </select>
             </div>
 
-            {imageFormat !== 'png' && (
-              <div className="flex flex-col space-y-1.5">
-                <label className="text-xs font-bold text-foreground/75" htmlFor="img-quality">
-                  Compression Quality ({imageQuality}%)
-                </label>
+            <div className="flex flex-col space-y-3 pt-2">
+              <div className="flex items-center space-x-2">
                 <input
-                  id="img-quality"
-                  type="range"
-                  min="10"
-                  max="100"
-                  value={imageQuality}
-                  onChange={(e) => setImageQuality(parseInt(e.target.value, 10))}
-                  className="w-full h-1.5 bg-background-subtle rounded-lg appearance-none cursor-pointer accent-accent"
+                  type="checkbox"
+                  id="target-size-toggle"
+                  checked={compressToTargetSize}
+                  onChange={(e) => {
+                    setCompressToTargetSize(e.target.checked);
+                    setSuccess(false);
+                    setDownloadBlob(null);
+                  }}
+                  className="rounded accent-accent focus:outline-none h-4 w-4 border-card-border text-accent"
                 />
+                <label htmlFor="target-size-toggle" className="text-xs font-bold text-foreground/75 cursor-pointer select-none">
+                  Target File Size Limit (KB)
+                </label>
               </div>
-            )}
+
+              {compressToTargetSize ? (
+                <div className="flex flex-col space-y-1.5 pl-6">
+                  <input
+                    type="number"
+                    min="1"
+                    max="50000"
+                    value={targetSizeKb}
+                    onChange={(e) => {
+                      setTargetSizeKb(parseInt(e.target.value, 10) || 200);
+                      setSuccess(false);
+                      setDownloadBlob(null);
+                    }}
+                    className="bg-card border border-card-border rounded px-3 py-1.5 text-xs w-32 focus:outline-none focus:border-accent text-foreground font-semibold"
+                  />
+                  <p className="text-[9px] text-foreground/50 leading-relaxed font-semibold">
+                    The tool will iteratively adjust image compression and dimensions to fit within this size limit.
+                  </p>
+                </div>
+              ) : (
+                imageFormat !== 'png' && (
+                  <div className="flex flex-col space-y-1.5 pt-1">
+                    <label className="text-xs font-bold text-foreground/75" htmlFor="img-quality">
+                      Compression Quality ({imageQuality}%)
+                    </label>
+                    <input
+                      id="img-quality"
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={imageQuality}
+                      onChange={(e) => {
+                        setImageQuality(parseInt(e.target.value, 10));
+                        setSuccess(false);
+                        setDownloadBlob(null);
+                      }}
+                      className="w-full h-1.5 bg-background-subtle rounded-lg appearance-none cursor-pointer accent-accent"
+                    />
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Compression report summary */}
+        {success && compressToTargetSize && actualWidthUsed && actualHeightUsed && (
+          <div className="mt-5 p-4 rounded-lg bg-accent-bg/40 border border-accent/15 text-left text-xs space-y-2">
+            <span className="font-bold text-accent uppercase tracking-wider text-[10px] block">Compression Report</span>
+            <div className="grid grid-cols-3 gap-4 font-semibold text-foreground/80">
+              <div>
+                <p className="text-[10px] text-foreground/50">Auto-tuned Resolution</p>
+                <p className="text-sm font-bold">{actualWidthUsed} &times; {actualHeightUsed} px</p>
+              </div>
+              {imageFormat !== 'png' && actualQualityUsed !== null && (
+                <div>
+                  <p className="text-[10px] text-foreground/50">Auto-tuned Quality</p>
+                  <p className="text-sm font-bold">{actualQualityUsed}%</p>
+                </div>
+              )}
+              {downloadBlob && (
+                <div>
+                  <p className="text-[10px] text-foreground/50">Final Output Size</p>
+                  <p className="text-sm font-bold text-accent">{(downloadBlob.size / 1024).toFixed(1)} KB</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </ToolLayout>
     </main>
   );

@@ -546,6 +546,110 @@ export function resizeImage(
 }
 
 /**
+ * Compress an image to target file size (KB) by iteratively adjusting quality and dimensions.
+ */
+export async function compressImageToTargetSize(
+  file: File,
+  width: number,
+  height: number,
+  targetSizeKb: number,
+  format: string
+): Promise<{ blob: Blob; qualityUsed: number; widthUsed: number; heightUsed: number }> {
+  const targetSizeBytes = targetSizeKb * 1024;
+  
+  // Load original image to get raw dimensions
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const image = new Image();
+      image.src = e.target?.result as string;
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error('Failed to load image'));
+    };
+    reader.onerror = () => reject(new Error('Failed to read image'));
+  });
+
+  let currentWidth = width;
+  let currentHeight = height;
+  let scale = 1.0;
+  let quality = 0.95;
+  let bestBlob: Blob | null = null;
+  let bestQuality = Math.round(quality * 100);
+  let bestWidth = currentWidth;
+  let bestHeight = currentHeight;
+
+  // We loop scaling dimensions down if quality sweeps alone can't reach the target size
+  for (let scaleIter = 0; scaleIter < 8; scaleIter++) {
+    currentWidth = Math.round(width * scale);
+    currentHeight = Math.round(height * scale);
+
+    // If dimensions are too small, break
+    if (currentWidth < 10 || currentHeight < 10) break;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = currentWidth;
+    canvas.height = currentHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to get 2D context');
+
+    ctx.drawImage(img, 0, 0, currentWidth, currentHeight);
+    const mimeType = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+
+    if (format === 'png') {
+      // PNG is lossless, quality is ignored. So we only resize.
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), 'image/png');
+      });
+      if (blob) {
+        if (!bestBlob || blob.size < bestBlob.size) {
+          bestBlob = blob;
+          bestWidth = currentWidth;
+          bestHeight = currentHeight;
+        }
+        if (blob.size <= targetSizeBytes) {
+          return { blob, qualityUsed: 100, widthUsed: currentWidth, heightUsed: currentHeight };
+        }
+      }
+      // Since quality sweeps do nothing for PNG, scale down immediately
+      scale -= 0.15;
+      continue;
+    }
+
+    // For lossy formats (JPEG/WebP), perform a quality sweep at the current resolution
+    const qualitiesToTry = [0.95, 0.85, 0.7, 0.5, 0.3, 0.15, 0.05];
+    for (const q of qualitiesToTry) {
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), mimeType, q);
+      });
+      
+      if (blob) {
+        if (!bestBlob || blob.size < bestBlob.size) {
+          bestBlob = blob;
+          bestQuality = Math.round(q * 100);
+          bestWidth = currentWidth;
+          bestHeight = currentHeight;
+        }
+        
+        if (blob.size <= targetSizeBytes) {
+          return { blob, qualityUsed: Math.round(q * 100), widthUsed: currentWidth, heightUsed: currentHeight };
+        }
+      }
+    }
+
+    // Scale down resolution for the next sweep
+    scale -= 0.15;
+  }
+
+  // If we couldn't hit the target, return the smallest one we generated
+  if (bestBlob) {
+    return { blob: bestBlob, qualityUsed: bestQuality, widthUsed: bestWidth, heightUsed: bestHeight };
+  }
+
+  throw new Error('Image compression failed');
+}
+
+/**
  * Convert a list of images to a PowerPoint presentation (.pptx), one image per slide.
  */
 export async function imagesToPpt(
