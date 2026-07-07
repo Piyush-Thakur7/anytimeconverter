@@ -1,19 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import Logo from './Logo';
 
-interface NavbarProps {
-  onSelectTool?: (toolId: string | null) => void;
-}
-
-export default function Navbar({ onSelectTool }: NavbarProps) {
-  const [isScrolled, setIsScrolled] = useState(false);
+export default function Navbar() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    // Determine initial theme from root class
+    if (typeof window !== 'undefined') {
+      const isDark = document.documentElement.classList.contains('dark');
+      setTheme(isDark ? 'dark' : 'light');
+    }
+
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -24,96 +28,103 @@ export default function Navbar({ onSelectTool }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleNavClick = (toolId: string | null) => {
-    if (onSelectTool) {
-      onSelectTool(toolId);
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
-    if (typeof window !== 'undefined') {
-      const event = new CustomEvent('set-active-tool', { detail: toolId });
-      window.dispatchEvent(event);
-    }
-    setIsMobileMenuOpen(false);
-    
-    // Smooth scroll back to workspace area
-    const targetElement = document.querySelector('#workspace-area') || document.querySelector('#home');
-    if (targetElement) {
-      const offset = 80;
-      const elementPosition = targetElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+    setTheme(nextTheme);
   };
+
+  const navLinks = [
+    { name: 'All Tools', href: '/' },
+    { name: 'PDF Tools', href: '/#pdf-tools' },
+    { name: 'Image Tools', href: '/#image-tools' },
+    { name: 'Privacy', href: '/#privacy' },
+  ];
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out border-b ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
         isScrolled 
-          ? 'bg-[#0a0a0a]/95 backdrop-blur-md py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] border-neutral-900' 
-          : 'bg-transparent py-5 border-transparent'
+          ? 'bg-background/95 backdrop-blur-md py-3 shadow-sm border-card-border' 
+          : 'bg-background py-4 border-transparent'
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Logo Text & Image */}
-        <button 
-          onClick={() => handleNavClick(null)}
-          className="flex items-center space-x-2 bg-transparent border-none cursor-pointer text-left focus:outline-none"
-        >
-          <Logo className="h-8 sm:h-10 w-auto" />
-          <span className="font-bebas text-lg sm:text-2xl tracking-wider text-white font-bold hover:text-accent transition-colors">
-            FLEXCONVERT
+        
+        {/* Logo and Wordmark */}
+        <Link href="/" className="flex items-center space-x-2 group">
+          <Logo className="h-8 w-auto transition-transform group-hover:scale-105" />
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors">
+            AnytimeConverter
           </span>
-        </button>
+        </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          <button
-            onClick={() => handleNavClick(null)}
-            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => handleNavClick('jpg-to-pdf')}
-            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-          >
-            JPG to PDF
-          </button>
-          <button
-            onClick={() => handleNavClick('pdf-to-jpg')}
-            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-          >
-            PDF to JPG
-          </button>
-          <button
-            onClick={() => handleNavClick('merge-pdf')}
-            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-          >
-            Merge PDF
-          </button>
-          <button
-            onClick={() => handleNavClick('image-rescaler')}
-            className="text-xs font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all duration-300 relative group"
-          >
-            Image Rescale
-          </button>
+        <nav className="hidden md:flex items-center space-x-6">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="text-xs font-semibold text-foreground/80 hover:text-accent uppercase tracking-wider transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
         </nav>
 
-        {/* Action Button: Privacy Guarantee Badge */}
-        <div className="hidden md:block">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            100% Client-Side Privacy
+        {/* Controls: Theme Toggle & Trust Badge */}
+        <div className="hidden md:flex items-center space-x-4">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-accent-bg text-accent border border-accent/15">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+            Offline-safe
           </span>
+
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg bg-background-subtle border border-card-border hover:border-accent text-foreground transition-all cursor-pointer"
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? (
+              // Moon Icon
+              <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              // Sun Icon
+              <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+              </svg>
+            )}
+          </button>
         </div>
 
-        {/* Mobile Hamburger menu */}
-        <div className="flex md:hidden items-center">
+        {/* Mobile Controls & Hamburger */}
+        <div className="flex md:hidden items-center space-x-3">
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded-lg bg-background-subtle border border-card-border text-foreground cursor-pointer"
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? (
+              <svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+              </svg>
+            )}
+          </button>
+
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-white hover:text-accent transition-colors focus:outline-none"
+            className="text-foreground hover:text-accent transition-colors focus:outline-none cursor-pointer"
             aria-label="Toggle Menu"
           >
             {isMobileMenuOpen ? (
@@ -131,45 +142,19 @@ export default function Navbar({ onSelectTool }: NavbarProps) {
 
       {/* Mobile Menu Panel */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-[#0a0a0a] border-t border-neutral-900 py-4 px-6 space-y-4 shadow-xl">
-          <nav className="flex flex-col space-y-4">
-            <button
-              onClick={() => handleNavClick(null)}
-              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => handleNavClick('jpg-to-pdf')}
-              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-            >
-              JPG to PDF
-            </button>
-            <button
-              onClick={() => handleNavClick('pdf-to-jpg')}
-              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-            >
-              PDF to JPG
-            </button>
-            <button
-              onClick={() => handleNavClick('merge-pdf')}
-              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-            >
-              Merge PDF
-            </button>
-            <button
-              onClick={() => handleNavClick('image-rescaler')}
-              className="text-left text-sm font-semibold tracking-wide text-neutral-300 hover:text-accent uppercase transition-all py-2"
-            >
-              Image Rescale
-            </button>
+        <div className="md:hidden bg-background border-t border-card-border py-4 px-6 space-y-4 shadow-xl">
+          <nav className="flex flex-col space-y-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-sm font-semibold text-foreground/80 hover:text-accent uppercase tracking-wider py-1.5 transition-colors"
+              >
+                {link.name}
+              </Link>
+            ))}
           </nav>
-          <div className="pt-4 border-t border-neutral-900 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              100% Client-Side Privacy
-            </span>
-          </div>
         </div>
       )}
     </header>

@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-const bebasNeue = Bebas_Neue({
-  weight: "400",
-  variable: "--font-bebas-neue",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,21 +11,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FlexConvert | Universal Offline File Converter",
-  description: "Convert and process files 100% locally in your browser. Convert JPG to PDF, PDF to JPG, Merge/Split PDFs, resize images, and convert Word/Text formats with absolute privacy.",
+  title: "AnytimeConverter | Free 100% Local File Converter",
+  description: "Convert and modify files locally in your browser. No file size limits, no signups, no uploads. Convert JPG to PDF, PDF to JPG, Merge PDFs, and resize images offline.",
   keywords: [
     "file converter",
-    "pdf to jpg",
-    "jpg to pdf",
-    "merge pdf",
-    "split pdf",
-    "image resizer",
-    "word to pdf",
-    "local converter",
-    "private converter"
+    "pdf to jpg converter free",
+    "jpg to pdf converter no signup",
+    "merge pdf online",
+    "image size rescaler",
+    "convert docx to pdf",
+    "offline file converter"
   ],
   openGraph: {
-    title: "FlexConvert | Universal Client-Side File Converter",
+    title: "AnytimeConverter | Free Local File Converter",
     description: "Privacy-first local file conversion suite. No uploads, no limits, instant conversions.",
     type: "website",
     locale: "en_US",
@@ -47,9 +38,25 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${bebasNeue.variable} ${inter.variable} h-full antialiased dark`}
+      className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-white">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-[#ffffff] text-[#0f172a] dark:bg-[#0f172a] dark:text-[#f8fafc] transition-colors duration-300">
         <Navbar />
         <main className="flex-grow">
           {children}

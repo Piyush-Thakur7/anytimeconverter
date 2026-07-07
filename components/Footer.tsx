@@ -1,66 +1,84 @@
 'use client';
 
+import Link from 'next/link';
 import Logo from './Logo';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  const pdfTools = [
+    { name: 'JPG to PDF Converter', href: '/jpg-to-pdf' },
+    { name: 'PDF to JPG Converter', href: '/pdf-to-jpg' },
+    { name: 'Merge PDF Files', href: '/merge-pdf' },
+    { name: 'Split PDF Pages', href: '/split-pdf' },
+    { name: 'Word to PDF Converter', href: '/word-to-pdf' },
+    { name: 'Extract Text from PDF', href: '/pdf-to-text' },
+  ];
+
+  const imageTools = [
+    { name: 'Image Rescaler', href: '/image-converter' },
+    { name: 'Convert PNG to WebP', href: '/image-converter' },
+    { name: 'Convert JPG to PNG', href: '/image-converter' },
+  ];
+
   return (
-    <footer className="bg-[#050505] border-t border-neutral-900 py-12 text-neutral-400 relative z-10">
+    <footer className="bg-background-subtle border-t border-card-border py-12 text-foreground/75 relative z-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          {/* Logo & Tagline */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+          
+          {/* Logo & Privacy Pitch */}
           <div className="md:col-span-2 flex flex-col space-y-4 items-start">
-            <div className="flex items-center space-x-3">
-              <Logo className="h-10 w-auto" isFooter={true} />
-              <span className="font-bebas text-xl sm:text-2xl tracking-wider text-white font-bold">
-                FLEXCONVERT
+            <div className="flex items-center space-x-2">
+              <Logo className="h-8 w-auto" isFooter={true} />
+              <span className="text-lg font-bold text-foreground">
+                AnytimeConverter
               </span>
             </div>
-            <p className="text-neutral-400 font-medium max-w-md text-xs sm:text-sm leading-relaxed">
-              FlexConvert is a high-performance, universal file converter suite.
-              All operations are executed 100% locally in your browser. Your files are never uploaded to any server, guaranteeing complete privacy and offline-level speed.
+            <p className="text-xs sm:text-sm leading-relaxed max-w-md text-foreground/70">
+              AnytimeConverter is a privacy-first, universal offline file converter. 
+              All calculations, parsing, and rendering are executed 100% locally in your browser. 
+              Your files never leave your computer, ensuring absolute privacy, no signup friction, and unlimited free use.
             </p>
           </div>
 
-          {/* Supported Converters List */}
+          {/* PDF Tools SEO column */}
           <div className="flex flex-col space-y-3">
-            <h3 className="font-bebas text-base tracking-wider text-white uppercase font-bold">PDF Tools</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">PDF Utilities</h3>
             <ul className="space-y-1.5 text-xs">
-              <li>Images to PDF</li>
-              <li>PDF to Images (JPG)</li>
-              <li>Merge PDF Documents</li>
-              <li>Split PDF by Page Ranges</li>
-              <li>Word/Text to PDF</li>
+              {pdfTools.map((tool) => (
+                <li key={tool.name}>
+                  <Link href={tool.href} className="hover:text-accent transition-colors font-medium">
+                    {tool.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Security & Info */}
+          {/* Image Tools SEO column */}
           <div className="flex flex-col space-y-3">
-            <h3 className="font-bebas text-base tracking-wider text-white uppercase font-bold">Privacy & Security</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Image Utilities</h3>
             <ul className="space-y-1.5 text-xs">
-              <li className="flex items-center gap-1.5 text-emerald-400">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                Zero Server Uploads
-              </li>
-              <li>WASM Local Execution</li>
-              <li>No Accounts Required</li>
-              <li>Unlimited Free Use</li>
-              <li>Works Offline</li>
+              {imageTools.map((tool) => (
+                <li key={tool.name}>
+                  <Link href={tool.href} className="hover:text-accent transition-colors font-medium">
+                    {tool.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
+
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="pt-6 border-t border-neutral-900 flex flex-col md:flex-row items-center justify-between text-xs text-neutral-500">
-          <p>&copy; {currentYear} FlexConvert. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <span className="hover:text-white transition-colors cursor-default">Privacy Policy</span>
-            <span className="hover:text-white transition-colors cursor-default">Terms of Service</span>
-            <span className="text-neutral-800">|</span>
-            <span className="text-neutral-600 font-medium">Powered by Next.js & WebAssembly</span>
+        <div className="pt-6 border-t border-card-border flex flex-col md:flex-row items-center justify-between text-xs text-foreground/50">
+          <p>&copy; {currentYear} AnytimeConverter. All rights reserved.</p>
+          <div className="flex space-x-6 mt-4 md:mt-0 font-medium">
+            <span className="hover:text-foreground cursor-default transition-colors">Privacy Policy</span>
+            <span className="hover:text-foreground cursor-default transition-colors">Terms of Service</span>
+            <span className="text-card-border">|</span>
+            <span className="text-foreground/40">Secure WebAssembly Engine</span>
           </div>
         </div>
       </div>
