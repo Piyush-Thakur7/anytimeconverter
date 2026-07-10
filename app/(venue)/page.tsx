@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ContactForm from '@/components/venue/ContactForm';
 import Lightbox from '@/components/venue/Lightbox';
+import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 // ==========================================
 // TEMPLATE CONFIGURATION VARIABLES (SWAP HERE)
@@ -21,7 +22,13 @@ const EMAIL = "celebrations@aureliagrandmanor.com";
 const CAPACITY_MIN = 100;
 const CAPACITY_MAX = 850;
 
-// Embed URL for Google Maps (iframe src)
+// Booking & Operational Policies
+const DEPOSIT_TERMS = "25% to secure dates";
+const BAR_POLICY = "Exclusive licensed services only";
+const OUTSIDE_VENDORS_POLICY = "Welcomed with prior authorization";
+
+// TODO: SWAP THIS WITH YOUR CLIENT'S GOOGLE MAP EMBED IFRAME URL
+// Go to Google Maps -> Search location -> Click Share -> Embed Map -> Copy src URL
 const MAP_EMBED_LOCATION = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14021.905626244583!2d77.17409249767223!3d28.524629474706597!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d1e065bf603a5%3A0x7d94cfd89d42cf38!2sChhattarpur%20Temple!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin";
 
 // Hero Banner Image
@@ -30,32 +37,60 @@ const HERO_IMAGE = "/images/venue/hero.jpg";
 // Gallery Category Filter Options: All, Wedding, Reception, Mehendi
 const GALLERY_IMAGES = [
   {
-    src: "/images/venue/wedding.jpg",
+    src: "https://images.unsplash.com/photo-1519225495810-7512c696505a?auto=format&fit=crop&q=80&w=800",
     category: "Wedding",
     alt: "Luxurious traditional wedding mandap with white roses",
     title: "The Royal Mandap Ceremony",
     description: "An elegant, custom floral mandap under ambient lighting, perfect for traditional and modern vow exchanges."
   },
   {
-    src: "/images/venue/mehendi.jpg",
+    src: "https://images.unsplash.com/photo-1544078751-58fed2b847ae?auto=format&fit=crop&q=80&w=800",
     category: "Mehendi",
     alt: "Vibrant outdoor mehendi ceremony setup",
     title: "Sun-Drenched Garden Mehendi",
     description: "Vibrant colors, fresh marigold hangings, and low-seating arrangements create a warm, celebratory afternoon vibe."
   },
   {
-    src: "/images/venue/reception.jpg",
+    src: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800",
     category: "Reception",
     alt: "Elegant reception ballroom dinner tables",
     title: "The Grand Reception Ballroom",
     description: "Indoors with tall candelabras, detailed tableware, gold Chiavari chairs, and high ceilings."
   },
   {
-    src: "/images/venue/hero.jpg",
+    src: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800",
+    category: "Wedding",
+    alt: "Grand wedding floral decorations and backdrop staging",
+    title: "Chandelier Stage Setup",
+    description: "A wide-angle preview of our premier stage dressed in fresh florals, setting the tone for an epic night."
+  },
+  {
+    src: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?auto=format&fit=crop&q=80&w=800",
+    category: "Mehendi",
+    alt: "Traditional henna sangeet outdoor decor",
+    title: "Colorful Sangeet Courtyard",
+    description: "Lively floral frames and rich heritage setups tailored for dynamic dance performances."
+  },
+  {
+    src: "https://images.unsplash.com/photo-1522413452208-996ff3f3e740?auto=format&fit=crop&q=80&w=800",
     category: "Reception",
-    alt: "Panoramic banquet hall view with chandeliers",
-    title: "Chandelier Ballroom Setup",
-    description: "A wide-angle preview of our premier ballroom dressed in navy and gold drapery, setting the tone for an epic night."
+    alt: "Luxury banquet dinner table layout",
+    title: "Imperial Dinner Service",
+    description: "Sophisticated table spacing, tall candles, and pristine glassware for curated dining."
+  },
+  {
+    src: "https://images.unsplash.com/photo-1591555200999-ac59e30a5971?auto=format&fit=crop&q=80&w=800",
+    category: "Wedding",
+    alt: "Luxury bride vanity and dress detail",
+    title: "Premium Bridal Suite",
+    description: "Private grooming stations and plush seating designed for relaxation before the vows."
+  },
+  {
+    src: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&q=80&w=800",
+    category: "Reception",
+    alt: "Festive cocktail bar setup with golden lights",
+    title: "The Palace Cocktail Lounge",
+    description: "Intimate bar lounges paired with dim mood lighting for high-profile mixers."
   }
 ];
 
@@ -107,19 +142,19 @@ const PACKAGES = [
 // Customer Testimonials
 const TESTIMONIALS = [
   {
-    name: "Aria & Kenneth",
-    quote: "The Aurelia Grand Manor made our dream wedding a reality. The ambiance, the staff's attention to detail, and the food were unmatched. Our guests are still raving about the chandeliers and the service a year later!",
-    eventType: "Wedding & Reception"
+    name: "Ananya & Rohan",
+    quote: "The Aurelia Grand Manor made our dream wedding reception a reality. The luxury decor, the impeccable coordination, and the stellar catering exceeded all our expectations. Our guests are still talking about the grand entrance and hospitality!",
+    eventType: "Wedding Reception"
   },
   {
-    name: "Priyah & Dev",
-    quote: "We hosted our Mehendi and Wedding here. Having access to the garden and the ballroom made transitions seamless. The team handled everything flawlessly, allowing us to completely live in the moment.",
-    eventType: "Multi-Day Wedding"
+    name: "Priya & Arjun",
+    quote: "We hosted our Sangeet and cocktail night here. Having the stunning outdoor lawn for dance performances and the majestic ballroom for the cocktail lounge made it seamless. The team handled our guest list of 500 with absolute ease.",
+    eventType: "Sangeet & Cocktail Night"
   },
   {
-    name: "Victoria & Robert",
-    quote: "Pure 5-star hospitality. From the initial booking enquiry to the late-night departure, the team treated us like royalty. If you want a zero-stress, beautiful wedding, this is the place.",
-    eventType: "Reception Ceremony"
+    name: "Meera & Vikram",
+    quote: "Pure 5-star experience for our Engagement ceremony. The planning team helped us customize the floral decorations and the catering menu perfectly. A beautiful venue that made our ring exchange feel truly royal.",
+    eventType: "Engagement Ceremony"
   }
 ];
 
@@ -956,16 +991,27 @@ export default function VenueHome() {
             </p>
             {/* Social Icons */}
             <div className="flex gap-4 pt-2">
-              {['facebook', 'instagram', 'pinterest'].map((social) => (
-                <a
-                  key={social}
-                  href="#"
-                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#c5a880] text-white/60 hover:text-[#e2d1b8] flex items-center justify-center transition-all duration-200"
-                  aria-label={`Follow us on ${social}`}
-                >
-                  <span className="text-[10px] uppercase font-bold tracking-wider">{social[0]}</span>
-                </a>
-              ))}
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#c5a880] text-white/60 hover:text-[#e2d1b8] flex items-center justify-center transition-all duration-200 cursor-pointer"
+                aria-label="Follow us on Facebook"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#c5a880] text-white/60 hover:text-[#e2d1b8] flex items-center justify-center transition-all duration-200 cursor-pointer"
+                aria-label="Follow us on Instagram"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a
+                href="#"
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 hover:border-[#c5a880] text-white/60 hover:text-[#e2d1b8] flex items-center justify-center transition-all duration-200 cursor-pointer"
+                aria-label="Follow us on YouTube"
+              >
+                <Youtube className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
@@ -1010,9 +1056,9 @@ export default function VenueHome() {
             <h4 className="text-xs font-bold uppercase tracking-widest text-[#e2d1b8]">Operational Policies</h4>
             <ul className="space-y-2 text-xs text-[#faf7f2]/70 font-light">
               <li>Guest capacity limits: {CAPACITY_MIN} - {CAPACITY_MAX} seated.</li>
-              <li>Booking deposits: 25% to secure dates.</li>
-              <li>Outside vendors: Welcomed with prior authorization.</li>
-              <li>Alcohol & bar options: Exclusive licensed services only.</li>
+              <li>Booking deposits: {DEPOSIT_TERMS}.</li>
+              <li>Outside vendors: {OUTSIDE_VENDORS_POLICY}.</li>
+              <li>Alcohol & bar options: {BAR_POLICY}.</li>
             </ul>
           </div>
         </div>
