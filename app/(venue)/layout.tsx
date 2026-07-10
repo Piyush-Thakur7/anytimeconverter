@@ -15,8 +15,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "The Grand Regent — Luxury Wedding & Banquet Venue",
-  description: "Experience the epitome of luxury at The Grand Regent. A premium, five-star wedding and banquet venue for your dream celebrations. Capacity up to 800 guests, in-house catering, and expert planning.",
+  title: "The Aurelia Grand Manor — Luxury Wedding & Banquet Venue",
+  description: "Experience the epitome of luxury at The Aurelia Grand Manor. A premium, five-star wedding and banquet venue for your dream celebrations. Capacity up to 850 guests, in-house catering, and expert planning.",
   keywords: ["wedding venue", "banquet hall", "luxury wedding", "wedding reception", "marriage hall", "party venue"],
 };
 

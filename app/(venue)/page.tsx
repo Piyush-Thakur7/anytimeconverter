@@ -9,12 +9,12 @@ import Lightbox from '@/components/venue/Lightbox';
 // ==========================================
 const VENUE_NAME = "The Aurelia Grand Manor";
 const TAGLINE = "Where Dream Celebrations Meet 5-Star Luxury";
-const LOCATION_CITY = "Beverly Hills, California";
-const FULL_ADDRESS = "9500 Wilshire Blvd, Beverly Hills, CA 90212";
+const LOCATION_CITY = "New Delhi, India";
+const FULL_ADDRESS = "Aurelia Estate, Chattarpur Mandir Road, Chhattarpur, New Delhi, Delhi 110074";
 
 // Contact Details
-const PHONE_NUMBER = "+1 (555) 234-5678";
-const WHATSAPP_NUMBER = "15552345678"; // Format: international number, digits only, no '+' or spaces
+const PHONE_NUMBER = "+91 98765 43210";
+const WHATSAPP_NUMBER = "919876543210"; // Format: international number, digits only, no '+' or spaces
 const EMAIL = "celebrations@aureliagrandmanor.com";
 
 // Capacity details
@@ -22,7 +22,7 @@ const CAPACITY_MIN = 100;
 const CAPACITY_MAX = 850;
 
 // Embed URL for Google Maps (iframe src)
-const MAP_EMBED_LOCATION = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3305.107026775191!2d-118.40248232386927!3d34.06675541697203!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2bc0ecbc7cd3d%3A0xe6bf4ccad320af64!2sBeverly%20Wilshire%2C%20A%20Four%20Seasons%20Hotel!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus";
+const MAP_EMBED_LOCATION = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14021.905626244583!2d77.17409249767223!3d28.524629474706597!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390d1e065bf603a5%3A0x7d94cfd89d42cf38!2sChhattarpur%20Temple!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin";
 
 // Hero Banner Image
 const HERO_IMAGE = "/images/venue/hero.jpg";
