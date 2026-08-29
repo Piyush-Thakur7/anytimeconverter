@@ -127,24 +127,21 @@ export default function CompressFileClient() {
   const info = getCompressionInfo();
 
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Compress files online — free and private"
-        description="Pack and compress multiple documents, photos, or media files of any format into a secure, space-saving ZIP archive locally inside your browser."
-        accept="*/*"
-        multiple={true}
-        uploadedFiles={uploadedFiles}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-        onRemoveFile={handleRemoveFile}
-      >
+    <ToolLayout
+      accept="*/*"
+      multiple={true}
+      uploadedFiles={uploadedFiles}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+      onRemoveFile={handleRemoveFile}
+    >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
           
           <div className="flex flex-col space-y-1">
@@ -203,6 +200,5 @@ export default function CompressFileClient() {
           </div>
         )}
       </ToolLayout>
-    </main>
   );
 }

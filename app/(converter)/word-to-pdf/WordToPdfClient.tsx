@@ -81,25 +81,20 @@ export default function WordToPdfClient() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Convert Word to PDF online — free and private"
-        description="Convert your Microsoft Word (.docx) or plain text (.txt) files into clean, readable PDF documents. Completely client-side — your document contents never touch a server."
-        accept=".docx,.txt"
-        multiple={false}
-        uploadedFiles={uploadedFiles}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-      />
-    </main>
+    <ToolLayout
+      accept=".docx,.txt"
+      multiple={false}
+      uploadedFiles={uploadedFiles}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+    />
   );
 }

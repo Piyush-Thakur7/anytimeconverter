@@ -4,8 +4,8 @@ import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 
 interface ToolLayoutProps {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   accept: string;
   multiple?: boolean;
   uploadedFiles: File[];
@@ -24,8 +24,6 @@ interface ToolLayoutProps {
 }
 
 export default function ToolLayout({
-  title,
-  description,
   accept,
   multiple = false,
   uploadedFiles,
@@ -75,7 +73,7 @@ export default function ToolLayout({
   const hasFiles = uploadedFiles.length > 0 || uploadedImages.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto p-1">
       {/* Hidden file input always available */}
       <input
         type="file"
@@ -85,35 +83,6 @@ export default function ToolLayout({
         multiple={multiple}
         className="hidden"
       />
-
-      {/* Back to Home Button */}
-      <Link
-        href="/"
-        className="inline-flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider text-foreground/60 hover:text-accent mb-6 transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        <span>All Tools</span>
-      </Link>
-
-      {/* Hero Header Block */}
-      <div className="text-center mb-8 space-y-3">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground">
-          {title}
-        </h1>
-        <p className="text-sm sm:text-base text-foreground/70 max-w-xl mx-auto leading-relaxed">
-          {description}
-        </p>
-
-        {/* Flat Trust Indicators */}
-        <div className="flex flex-wrap justify-center gap-2 pt-2 text-[10px] font-bold uppercase tracking-wider text-foreground/60">
-          <span className="px-2.5 py-1 rounded bg-background-subtle border border-card-border">No Signups</span>
-          <span className="px-2.5 py-1 rounded bg-background-subtle border border-card-border">No Watermarks</span>
-          <span className="px-2.5 py-1 rounded bg-background-subtle border border-card-border">No Size Limits</span>
-          <span className="px-2.5 py-1 rounded bg-background-subtle border border-card-border">100% Free</span>
-        </div>
-      </div>
 
       {/* Reusable Workspace Block with drag and drop overlay support even when loaded */}
       <div 

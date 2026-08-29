@@ -146,104 +146,99 @@ export default function ImagesToPptClient() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Convert images to PowerPoint online — free and private"
-        description="Turn your photos (JPG, PNG, WebP) into a PowerPoint presentation (.pptx) instantly. All slides are compiled locally in your browser to maintain total data confidentiality."
-        accept="image/*"
-        multiple={true}
-        uploadedFiles={uploadedFiles}
-        uploadedImages={uploadedImages}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-        onRemoveFile={handleRemoveFile}
-      >
-        {/* Custom Settings Config */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          
-          <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-foreground/75" htmlFor="ppt-orientation">
-              Slide Orientation
-            </label>
-            <select
-              id="ppt-orientation"
-              value={orientation}
-              onChange={(e) => setOrientation(e.target.value as '16x9' | '4x3')}
-              className="bg-card border border-card-border rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-foreground font-semibold"
-            >
-              <option value="16x9">Widescreen (16:9)</option>
-              <option value="4x3">Standard (4:3)</option>
-            </select>
-            <p className="text-[10px] text-foreground/50 pt-0.5">Determine the aspect ratio bounds of your presentation slides.</p>
-          </div>
-
-          <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-foreground/75" htmlFor="ppt-fit-mode">
-              Image Sizing Fit
-            </label>
-            <select
-              id="ppt-fit-mode"
-              value={fitMode}
-              onChange={(e) => setFitMode(e.target.value as 'contain' | 'cover')}
-              className="bg-card border border-card-border rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-foreground font-semibold"
-            >
-              <option value="contain">Fit Within Slide (Full Image)</option>
-              <option value="cover">Fill Slide (No Borders / Crop Edges)</option>
-            </select>
-            <p className="text-[10px] text-foreground/50 pt-0.5">Configure whether images are contained fully or cropped to cover slide boundaries.</p>
-          </div>
-
+    <ToolLayout
+      accept="image/*"
+      multiple={true}
+      uploadedFiles={uploadedFiles}
+      uploadedImages={uploadedImages}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+      onRemoveFile={handleRemoveFile}
+    >
+      {/* Custom Settings Config */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+        
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-bold text-foreground/75" htmlFor="ppt-orientation">
+            Slide Orientation
+          </label>
+          <select
+            id="ppt-orientation"
+            value={orientation}
+            onChange={(e) => setOrientation(e.target.value as '16x9' | '4x3')}
+            className="bg-card border border-card-border rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-foreground font-semibold"
+          >
+            <option value="16x9">Widescreen (16:9)</option>
+            <option value="4x3">Standard (4:3)</option>
+          </select>
+          <p className="text-[10px] text-foreground/50 pt-0.5">Determine the aspect ratio bounds of your presentation slides.</p>
         </div>
 
-        {/* Reordering Preview Panel */}
-        {uploadedImages.length > 1 && (
-          <div className="space-y-3 text-left border-t border-card-border pt-5">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block">
-              Adjust Slide Sequence
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-56 overflow-y-auto p-1">
-              {uploadedImages.map((img, idx) => (
-                <div key={idx} className="group relative rounded border border-card-border overflow-hidden bg-background">
-                  <img src={img.dataUrl} className="w-full h-24 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`slide ${idx + 1}`} />
-                  
-                  {/* Reorder Buttons Overlay */}
-                  <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5">
-                    <button
-                      onClick={() => handleMoveImage(idx, 'left')}
-                      disabled={idx === 0}
-                      className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
-                      title="Move Left"
-                    >
-                      &larr;
-                    </button>
-                    <button
-                      onClick={() => handleMoveImage(idx, 'right')}
-                      disabled={idx === uploadedImages.length - 1}
-                      className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
-                      title="Move Right"
-                    >
-                      &rarr;
-                    </button>
-                  </div>
-                  
-                  <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[9px] font-bold text-center text-foreground/75">
-                    Slide {idx + 1}
-                  </div>
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-bold text-foreground/75" htmlFor="ppt-fit-mode">
+            Image Sizing Fit
+          </label>
+          <select
+            id="ppt-fit-mode"
+            value={fitMode}
+            onChange={(e) => setFitMode(e.target.value as 'contain' | 'cover')}
+            className="bg-card border border-card-border rounded px-3 py-2 text-xs w-full focus:outline-none focus:border-accent text-foreground font-semibold"
+          >
+            <option value="contain">Fit Within Slide (Full Image)</option>
+            <option value="cover">Fill Slide (No Borders / Crop Edges)</option>
+          </select>
+          <p className="text-[10px] text-foreground/50 pt-0.5">Configure whether images are contained fully or cropped to cover slide boundaries.</p>
+        </div>
+
+      </div>
+
+      {/* Reordering Preview Panel */}
+      {uploadedImages.length > 1 && (
+        <div className="space-y-3 text-left border-t border-card-border pt-5">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block">
+            Adjust Slide Sequence
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-56 overflow-y-auto p-1">
+            {uploadedImages.map((img, idx) => (
+              <div key={idx} className="group relative rounded border border-card-border overflow-hidden bg-background">
+                <img src={img.dataUrl} className="w-full h-24 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`slide ${idx + 1}`} />
+                
+                {/* Reorder Buttons Overlay */}
+                <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5">
+                  <button
+                    onClick={() => handleMoveImage(idx, 'left')}
+                    disabled={idx === 0}
+                    className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                    title="Move Left"
+                  >
+                    &larr;
+                  </button>
+                  <button
+                    onClick={() => handleMoveImage(idx, 'right')}
+                    disabled={idx === uploadedImages.length - 1}
+                    className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                    title="Move Right"
+                  >
+                    &rarr;
+                  </button>
                 </div>
-              ))}
-            </div>
+                
+                <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[9px] font-bold text-center text-foreground/75">
+                  Slide {idx + 1}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </ToolLayout>
-    </main>
+        </div>
+      )}
+    </ToolLayout>
   );
 }

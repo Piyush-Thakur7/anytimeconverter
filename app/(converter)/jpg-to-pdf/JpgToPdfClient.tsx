@@ -145,87 +145,82 @@ export default function JpgToPdfClient() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Convert JPG to PDF online — free and private"
-        description="Combine and convert your images (JPG, PNG, WebP) into a high-quality PDF document instantly. All conversions run locally inside your browser for total privacy."
-        accept="image/*"
-        multiple={true}
-        uploadedFiles={uploadedFiles}
-        uploadedImages={uploadedImages}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-        onRemoveFile={handleRemoveFile}
-      >
-        <div className="space-y-4 text-left">
-          {/* Custom Settings Config */}
-          <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-foreground/75" htmlFor="pdf-margin">
-              Page Margins (mm)
-            </label>
-            <input
-              id="pdf-margin"
-              type="number"
-              min="0"
-              max="50"
-              value={pdfMargin}
-              onChange={(e) => setPdfMargin(parseInt(e.target.value, 10) || 0)}
-              className="bg-card border border-card-border rounded px-3 py-2 text-xs w-28 focus:outline-none focus:border-accent text-foreground font-semibold"
-            />
-            <p className="text-[10px] text-foreground/50 pt-0.5">Define empty margins around each page of the generated PDF file.</p>
-          </div>
-
-          {/* Reordering Preview Panel */}
-          {uploadedImages.length > 1 && (
-            <div className="space-y-3 pt-4 border-t border-card-border">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block">
-                Adjust Page Sequence
-              </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-56 overflow-y-auto p-1">
-                {uploadedImages.map((img, idx) => (
-                  <div key={idx} className="group relative rounded border border-card-border overflow-hidden bg-background">
-                    <img src={img.dataUrl} className="w-full h-24 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`page ${idx + 1}`} />
-                    
-                    {/* Reorder Buttons Overlay */}
-                    <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5">
-                      <button
-                        onClick={() => handleMoveImage(idx, 'left')}
-                        disabled={idx === 0}
-                        className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
-                        title="Move Left"
-                      >
-                        &larr;
-                      </button>
-                      <button
-                        onClick={() => handleMoveImage(idx, 'right')}
-                        disabled={idx === uploadedImages.length - 1}
-                        className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
-                        title="Move Right"
-                      >
-                        &rarr;
-                      </button>
-                    </div>
-                    
-                    <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[9px] font-bold text-center text-foreground/75">
-                      Page {idx + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-foreground/50 pt-0.5">Hover over previews and use arrows to arrange document pages.</p>
-            </div>
-          )}
+    <ToolLayout
+      accept="image/*"
+      multiple={true}
+      uploadedFiles={uploadedFiles}
+      uploadedImages={uploadedImages}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+      onRemoveFile={handleRemoveFile}
+    >
+      <div className="space-y-4 text-left">
+        {/* Custom Settings Config */}
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-bold text-foreground/75" htmlFor="pdf-margin">
+            Page Margins (mm)
+          </label>
+          <input
+            id="pdf-margin"
+            type="number"
+            min="0"
+            max="50"
+            value={pdfMargin}
+            onChange={(e) => setPdfMargin(parseInt(e.target.value, 10) || 0)}
+            className="bg-card border border-card-border rounded px-3 py-2 text-xs w-28 focus:outline-none focus:border-accent text-foreground font-semibold"
+          />
+          <p className="text-[10px] text-foreground/50 pt-0.5">Define empty margins around each page of the generated PDF file.</p>
         </div>
-      </ToolLayout>
-    </main>
+
+        {/* Reordering Preview Panel */}
+        {uploadedImages.length > 1 && (
+          <div className="space-y-3 pt-4 border-t border-card-border">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block">
+              Adjust Page Sequence
+            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-56 overflow-y-auto p-1">
+              {uploadedImages.map((img, idx) => (
+                <div key={idx} className="group relative rounded border border-card-border overflow-hidden bg-background">
+                  <img src={img.dataUrl} className="w-full h-24 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`page ${idx + 1}`} />
+                  
+                  {/* Reorder Buttons Overlay */}
+                  <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-1.5">
+                    <button
+                      onClick={() => handleMoveImage(idx, 'left')}
+                      disabled={idx === 0}
+                      className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                      title="Move Left"
+                    >
+                      &larr;
+                    </button>
+                    <button
+                      onClick={() => handleMoveImage(idx, 'right')}
+                      disabled={idx === uploadedImages.length - 1}
+                      className="p-1 px-2 bg-accent text-white text-xs font-bold rounded hover:bg-accent-hover transition-colors disabled:opacity-40 cursor-pointer"
+                      title="Move Right"
+                    >
+                      &rarr;
+                    </button>
+                  </div>
+                  
+                  <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[9px] font-bold text-center text-foreground/75">
+                    Page {idx + 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-foreground/50 pt-0.5">Hover over previews and use arrows to arrange document pages.</p>
+          </div>
+        )}
+      </div>
+    </ToolLayout>
   );
 }

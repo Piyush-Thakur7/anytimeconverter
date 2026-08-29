@@ -198,70 +198,65 @@ export default function PdfToTextClient() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Extract text from PDF online — free and private"
-        description="Pull selectable text from any PDF document. Works fully in your browser — files are never uploaded to any server."
-        accept=".pdf"
-        multiple={false}
-        uploadedFiles={uploadedFiles}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-      >
-        {/* Custom Settings Config */}
-        {showOcrPrompt && !isProcessing && (
-          <div className="p-4 bg-accent-bg/40 border border-accent/15 rounded-lg flex flex-col items-center space-y-3 text-center">
-            <svg className="w-6 h-6 text-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <div className="space-y-1">
-              <p className="text-xs text-foreground/80 font-bold">
-                No selectable text layer found. Would you like to run optical character recognition (OCR) instead?
-              </p>
-              <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
-                OCR extracts text from image data locally inside your browser. No server calls are made. 
-                Best results are achieved with clear, high-resolution scans.
-              </p>
-            </div>
+    <ToolLayout
+      accept=".pdf"
+      multiple={false}
+      uploadedFiles={uploadedFiles}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+    >
+      {/* Custom Settings Config */}
+      {showOcrPrompt && !isProcessing && (
+        <div className="p-4 bg-accent-bg/40 border border-accent/15 rounded-lg flex flex-col items-center space-y-3 text-center">
+          <svg className="w-6 h-6 text-accent shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <div className="space-y-1">
+            <p className="text-xs text-foreground/80 font-bold">
+              No selectable text layer found. Would you like to run optical character recognition (OCR) instead?
+            </p>
+            <p className="text-[10px] text-foreground/50 leading-relaxed font-semibold">
+              OCR extracts text from image data locally inside your browser. No server calls are made. 
+              Best results are achieved with clear, high-resolution scans.
+            </p>
+          </div>
+          <button
+            onClick={handleRunOcr}
+            className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded shadow transition-colors cursor-pointer"
+          >
+            Run Local OCR
+          </button>
+        </div>
+      )}
+
+      {extractedText && (
+        <div className="space-y-3 pt-4 border-t border-card-border text-left">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60">
+              Extracted Text Output
+            </span>
             <button
-              onClick={handleRunOcr}
-              className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded shadow transition-colors cursor-pointer"
+              onClick={handleCopy}
+              className="text-[10px] uppercase tracking-wider font-bold text-accent hover:underline cursor-pointer"
             >
-              Run Local OCR
+              {copied ? 'Copied!' : 'Copy to Clipboard'}
             </button>
           </div>
-        )}
-
-        {extractedText && (
-          <div className="space-y-3 pt-4 border-t border-card-border text-left">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60">
-                Extracted Text Output
-              </span>
-              <button
-                onClick={handleCopy}
-                className="text-[10px] uppercase tracking-wider font-bold text-accent hover:underline cursor-pointer"
-              >
-                {copied ? 'Copied!' : 'Copy to Clipboard'}
-              </button>
-            </div>
-            <textarea
-              readOnly
-              value={extractedText}
-              className="w-full h-48 bg-background-subtle border border-card-border rounded p-3 text-xs focus:outline-none text-foreground/80 font-mono font-medium resize-none"
-            />
-          </div>
-        )}
-      </ToolLayout>
-    </main>
+          <textarea
+            readOnly
+            value={extractedText}
+            className="w-full h-48 bg-background-subtle border border-card-border rounded p-3 text-xs focus:outline-none text-foreground/80 font-mono font-medium resize-none"
+          />
+        </div>
+      )}
+    </ToolLayout>
   );
 }

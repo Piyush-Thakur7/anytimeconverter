@@ -83,41 +83,36 @@ export default function SplitPdfClient() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Split PDF pages online — free and private"
-        description="Extract specific pages or custom page ranges from your PDF document into a new file. Runs entirely locally in your browser for maximum privacy."
-        accept=".pdf"
-        multiple={false}
-        uploadedFiles={uploadedFiles}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-      >
-        {/* Custom Settings Config */}
-        <div className="flex flex-col space-y-1 text-left">
-          <label className="text-xs font-bold text-foreground/75" htmlFor="pdf-split-range">
-            Page Range (e.g. 1-3, 5)
-          </label>
-          <input
-            id="pdf-split-range"
-            type="text"
-            value={pdfSplitRange}
-            onChange={(e) => setPdfSplitRange(e.target.value)}
-            placeholder="e.g. 1-2, 4"
-            className="bg-card border border-card-border rounded px-3 py-2 text-xs w-48 focus:outline-none focus:border-accent text-foreground font-semibold"
-          />
-          <p className="text-[10px] text-foreground/50 pt-0.5">Enter comma-separated single page numbers or page ranges with hyphens.</p>
-        </div>
-      </ToolLayout>
-    </main>
+    <ToolLayout
+      accept=".pdf"
+      multiple={false}
+      uploadedFiles={uploadedFiles}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+    >
+      {/* Custom Settings Config */}
+      <div className="flex flex-col space-y-1 text-left">
+        <label className="text-xs font-bold text-foreground/75" htmlFor="pdf-split-range">
+          Page Range (e.g. 1-3, 5)
+        </label>
+        <input
+          id="pdf-split-range"
+          type="text"
+          value={pdfSplitRange}
+          onChange={(e) => setPdfSplitRange(e.target.value)}
+          placeholder="e.g. 1-2, 4"
+          className="bg-card border border-card-border rounded px-3 py-2 text-xs w-48 focus:outline-none focus:border-accent text-foreground font-semibold"
+        />
+        <p className="text-[10px] text-foreground/50 pt-0.5">Enter comma-separated single page numbers or page ranges with hyphens.</p>
+      </div>
+    </ToolLayout>
   );
 }

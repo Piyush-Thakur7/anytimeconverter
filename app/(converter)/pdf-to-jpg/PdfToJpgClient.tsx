@@ -115,52 +115,47 @@ export default function PdfToJpgClient() {
     link.click();
     document.body.removeChild(link);
   };
-
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Convert PDF to JPG online — free and private"
-        description="Convert your PDF document into high-quality JPEG images instantly. View page previews and download individual sheets or grab all pages in a single ZIP."
-        accept=".pdf"
-        multiple={false}
-        uploadedFiles={uploadedFiles}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-      >
-        {/* Custom Render for PDF Pages Extracted */}
-        {extractedPages.length > 0 && (
-          <div className="space-y-3 text-left">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block border-b border-card-border pb-1.5">
-              Extracted Pages ({extractedPages.length})
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1">
-              {extractedPages.map((page) => (
-                <div key={page.pageNumber} className="group relative rounded border border-card-border overflow-hidden bg-background">
-                  <img src={page.dataUrl} className="w-full h-32 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`page ${page.pageNumber}`} />
-                  <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      onClick={() => downloadSinglePage(page)}
-                      className="px-2 py-1 bg-accent text-white text-[10px] font-bold rounded shadow hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                      Download JPG
-                    </button>
-                  </div>
-                  <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[10px] font-bold text-center text-foreground/75">
-                    Page {page.pageNumber}
-                  </div>
+    <ToolLayout
+      accept=".pdf"
+      multiple={false}
+      uploadedFiles={uploadedFiles}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+    >
+      {/* Custom Render for PDF Pages Extracted */}
+      {extractedPages.length > 0 && (
+        <div className="space-y-3 text-left">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/60 block border-b border-card-border pb-1.5">
+            Extracted Pages ({extractedPages.length})
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1">
+            {extractedPages.map((page) => (
+              <div key={page.pageNumber} className="group relative rounded border border-card-border overflow-hidden bg-background">
+                <img src={page.dataUrl} className="w-full h-32 object-contain bg-neutral-100 dark:bg-neutral-800" alt={`page ${page.pageNumber}`} />
+                <div className="absolute inset-0 bg-neutral-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button
+                    onClick={() => downloadSinglePage(page)}
+                    className="px-2 py-1 bg-accent text-white text-[10px] font-bold rounded shadow hover:bg-accent-hover transition-colors cursor-pointer"
+                  >
+                    Download JPG
+                  </button>
                 </div>
-              ))}
-            </div>
+                <div className="bg-background-subtle py-1 px-2 border-t border-card-border text-[10px] font-bold text-center text-foreground/75">
+                  Page {page.pageNumber}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </ToolLayout>
-    </main>
+        </div>
+      )}
+    </ToolLayout>
   );
 }

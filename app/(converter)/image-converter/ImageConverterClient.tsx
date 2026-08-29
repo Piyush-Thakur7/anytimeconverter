@@ -187,24 +187,21 @@ export default function ImageConverterClient() {
   };
 
   return (
-    <main className="pt-24 pb-12 animate-fade-in">
-      <ToolLayout
-        title="Resize and convert images online — free and private"
-        description="Rescale image bounds, adjust compression quality, and swap between PNG, JPEG, and WebP formats. Processed completely in-browser without sending photos online."
-        accept="image/*"
-        multiple={false}
-        uploadedFiles={uploadedFiles}
-        uploadedImages={uploadedImages}
-        isProcessing={isProcessing}
-        progress={progress}
-        success={success}
-        errorMsg={errorMsg}
-        downloadName={downloadName}
-        onFilesSelected={handleFilesSelected}
-        onClear={handleClear}
-        onConvert={handleConvert}
-        onDownload={handleDownload}
-      >
+    <ToolLayout
+      accept="image/*"
+      multiple={false}
+      uploadedFiles={uploadedFiles}
+      uploadedImages={uploadedImages}
+      isProcessing={isProcessing}
+      progress={progress}
+      success={success}
+      errorMsg={errorMsg}
+      downloadName={downloadName}
+      onFilesSelected={handleFilesSelected}
+      onClear={handleClear}
+      onConvert={handleConvert}
+      onDownload={handleDownload}
+    >
         {/* Custom Settings Config */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
           <div className="space-y-4">
@@ -352,6 +349,5 @@ export default function ImageConverterClient() {
           </div>
         )}
       </ToolLayout>
-    </main>
   );
 }
