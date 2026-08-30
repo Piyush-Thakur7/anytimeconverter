@@ -41,9 +41,7 @@
     "type": "git",
     "url": "https://github.com/Piyush-Thakur7/razoragent.git"
   },
-  "dependencies": {
-    "razoragent": "^1.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
