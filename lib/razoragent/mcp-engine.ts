@@ -133,21 +133,74 @@ export class MCPEngine {
   }
 
   private searchProducts(query: string, category?: string, maxPrice?: number, minRating?: number) {
-    const q = (query || '').toLowerCase().trim();
+    const rawQ = (query || '').toLowerCase().trim();
+    const stopWords = new Set(['a', 'an', 'the', 'in', 'for', 'with', 'to', 'me', 'of', 'at', 'on', 'under', 'below', 'buy', 'order', 'get', 'find', 'please', 'want', 'some', 'any', 'good', 'best', 'need', 'i', 'would', 'like', 'show']);
 
-    const results = MERCHANT_CATALOG.filter((p) => {
-      const matchesQuery =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.tags.some((t) => t.toLowerCase().includes(q));
+    // Extract search tokens
+    const tokens = rawQ
+      .replace(/[^a-z0-9\s-]/g, ' ')
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !stopWords.has(t));
+
+    const scored = MERCHANT_CATALOG.map((p) => {
+      let score = 0;
+
+      if (tokens.length === 0) {
+        score = 10;
+      } else {
+        const pNameLower = p.name.toLowerCase();
+        const pDescLower = p.description.toLowerCase();
+        const pCatLower = p.category.toLowerCase();
+        const pTagsLower = p.tags.map((t) => t.toLowerCase());
+
+        // Check full phrase match
+        if (rawQ && (pNameLower.includes(rawQ) || pTagsLower.some((t) => t.includes(rawQ)))) {
+          score += 120;
+        }
+
+        for (const token of tokens) {
+          const singular = token.endsWith('s') && token.length > 3 ? token.slice(0, -1) : token;
+          const plural = token + 's';
+
+          // 1. Exact Tag Match
+          if (pTagsLower.includes(token) || pTagsLower.includes(singular) || pTagsLower.includes(plural)) {
+            score += 100;
+          }
+          // 2. Exact word match in product name
+          else if (pNameLower.split(/[\s-]+/).includes(token) || pNameLower.split(/[\s-]+/).includes(singular)) {
+            score += 80;
+          }
+          // 3. Category match
+          else if (pCatLower.includes(token) || pCatLower.includes(singular)) {
+            score += 60;
+          }
+          // 4. Substring in name
+          else if (pNameLower.includes(token) || pNameLower.includes(singular)) {
+            score += 40;
+          }
+          // 5. Partial tag match
+          else if (pTagsLower.some((t) => t.includes(token) || token.includes(t))) {
+            score += 25;
+          }
+          // 6. Substring in description
+          else if (pDescLower.includes(token) || pDescLower.includes(singular)) {
+            score += 15;
+          }
+        }
+      }
 
       const matchesCategory = !category || p.category.toLowerCase() === category.toLowerCase();
       const matchesPrice = !maxPrice || p.price <= maxPrice;
       const matchesRating = !minRating || p.rating >= minRating;
 
-      return matchesQuery && matchesCategory && matchesPrice && matchesRating;
+      return { product: p, score, matches: score > 0 && matchesCategory && matchesPrice && matchesRating };
     });
+
+    const results = scored
+      .filter((s) => s.matches)
+      .sort((a, b) => b.score - a.score)
+      .map((s) => s.product);
 
     return {
       query,

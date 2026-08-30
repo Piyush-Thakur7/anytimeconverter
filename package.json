@@ -1,27 +1,49 @@
 {
-  "name": "stylename",
-  "version": "0.1.0",
-  "private": true,
+  "name": "razoragent",
+  "version": "1.0.6",
+  "description": "RazorAgent by Resence — Bounded Model Context Protocol (MCP) Commerce & Settlement Gateway for Autonomous AI Buyers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://razoragent.resence.in",
+  "bin": {
+    "razoragent": "./bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build:package": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build:package",
+    "build": "next build && npm run build:package",
     "dev": "next dev",
-    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint",
+    "test": "npm run test:razoragent",
+    "test:razoragent": "tsx scripts/test-razoragent.ts",
+    "test:mcp": "tsx scripts/test-mcp-direct.ts"
   },
-  "dependencies": {
-    "docx": "^9.7.1",
-    "jspdf": "^4.2.1",
-    "jszip": "^3.10.1",
-    "lucide-react": "^0.470.0",
-    "mammoth": "^1.12.0",
-    "next": "16.2.9",
-    "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.1.200",
-    "pptxgenjs": "^4.0.1",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "tesseract.js": "^7.0.0"
+  "keywords": [
+    "resence",
+    "razoragent",
+    "razorpay",
+    "mcp",
+    "model-context-protocol",
+    "agentic-commerce",
+    "ai-agents",
+    "fintech",
+    "guardrails",
+    "idempotency"
+  ],
+  "author": "Piyush Singh (Resence) <th.piyushsingh2007@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Piyush-Thakur7/razoragent.git"
   },
+  "dependencies": {},
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
@@ -29,7 +51,12 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "lucide-react": "^0.470.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "tailwindcss": "^4",
+    "tsx": "^4.19.0",
     "typescript": "^5"
   }
 }

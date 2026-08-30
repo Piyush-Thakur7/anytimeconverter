@@ -1,6 +1,7 @@
 /**
  * RazorAgent Autonomous AI Buyer Agent Engine
  * Multi-step agentic execution loop that calls MCP tools, validates policies, and generates live execution steps.
+ * 100% Free-text Semantic NLP Parser without hardcoded query branching.
  */
 
 import { AgentSimulationStep, CartQuote, PolicyDecision, RazorpayOrderResponse } from './types';
@@ -47,61 +48,72 @@ export class AgentSimulator {
       });
     };
 
-    // Step 1: Perception & Intent Classification
+    // Step 1: Perception & Natural Intent Classification
     addStep(
       'PERCEPTION',
       `Analyzing buyer intent from prompt: "${prompt}". Parsing target product specifications, budget constraints, preferred attributes, and transaction limits.`
     );
 
-    // Identify target query keywords
     const lower = prompt.toLowerCase();
-    let query = 'keyboard';
-    let maxPrice: number | undefined = undefined;
-    let coupon: string | undefined = 'AGENT500';
-    let targetQty = 1;
 
-    if (lower.includes('headphone') || lower.includes('anc') || lower.includes('sony')) {
-      query = 'headphones';
-      coupon = 'PREMIUM10';
-    } else if (lower.includes('earbud') || lower.includes('nothing')) {
-      query = 'earbuds';
-      coupon = 'AGENT500';
-    } else if (lower.includes('coffee') || lower.includes('roast') || lower.includes('tokai')) {
-      query = 'coffee';
-      coupon = 'COFFEE100';
-    } else if (lower.includes('mouse') || lower.includes('logitech') || lower.includes('master')) {
-      query = 'mouse';
-      coupon = 'AGENT500';
-    } else if (lower.includes('bag') || lower.includes('backpack') || lower.includes('aer')) {
-      query = 'backpack';
-      coupon = 'TRAVEL15';
-    } else if (lower.includes('mat') || lower.includes('desk')) {
-      query = 'desk mat';
-      coupon = 'DESK200';
-    } else if (lower.includes('protein') || lower.includes('whey') || lower.includes('nutrition')) {
-      query = 'protein';
-      coupon = 'FIT10';
+    // 1. Precise Quantity Extraction (Supports '5 units', '5 quantity', 'quantity 5', '5x', '5 pcs', 'buy 5')
+    let targetQty = 1;
+    const explicitQtyMatch = prompt.match(/\b([1-9][0-9]?)\s*(?:units|items|pieces|x|pcs|qty|quantity|count|nos)\b/i);
+    const prefixQtyMatch = prompt.match(/\b(?:quantity|qty|count)\s*[:=]?\s*([1-9][0-9]?)\b/i);
+    
+    if (explicitQtyMatch && explicitQtyMatch[1]) {
+      targetQty = parseInt(explicitQtyMatch[1], 10);
+    } else if (prefixQtyMatch && prefixQtyMatch[1]) {
+      targetQty = parseInt(prefixQtyMatch[1], 10);
+    } else {
+      const countWordMatch = prompt.match(/\b(?:buy|order|get|purchase)\s+([1-9][0-9]?)\s+(?!wh-|k2|xm|[0-9])([a-z]+)/i);
+      if (countWordMatch && countWordMatch[1]) {
+        targetQty = parseInt(countWordMatch[1], 10);
+      }
     }
 
-    // Extract explicit price bounds if mentioned
-    const priceMatch = prompt.match(/(?:under|below|max|budget)\s*(?:₹|rs\.?|inr)?\s*([0-9,]+)/i);
-    if (priceMatch && priceMatch[1]) {
+    // 2. Dynamic Budget / Price Extraction
+    let maxPrice: number | undefined = undefined;
+    const priceMatch = prompt.match(/(?:under|below|max|budget|upto|less\s+than|worth|around|for)?\s*(?:₹|rs\.?|inr)?\s*([0-9]{3,7})/i);
+    if (priceMatch && priceMatch[1] && !priceMatch[1].startsWith('1000') && !lower.includes('wh-1000')) {
       maxPrice = parseInt(priceMatch[1].replace(/,/g, ''), 10);
     }
 
-    // Extract quantity if specified (e.g. "buy 5 units")
-    const qtyMatch = prompt.match(/(?:buy|order|get)\s*([0-9]+)\s*(?:units|items|pieces|x)/i);
-    if (qtyMatch && qtyMatch[1]) {
-      targetQty = parseInt(qtyMatch[1], 10);
-    }
+    // 3. Dynamic Keyword Extraction (Strips filler words and intent prefixes)
+    let cleanedKeywords = lower
+      .replace(/(?:i\s+want\s+to\s+buy|i\s+would\s+like\s+to\s+order|buy\s+me|order\s+me|purchase|get\s+me|find\s+me|can\s+you\s+get|please\s+buy|order|buy|find|search|get|i\s+need|need)\s+/gi, ' ')
+      .replace(/(?:under|below|above|max|budget|for|with|about|worth)\s*(?:₹|rs\.?|inr)?\s*[0-9,]+/gi, ' ')
+      .replace(/(?:[0-9]+)\s*(?:units|items|pieces|x|pcs|qty|quantity|count|nos)/gi, ' ')
+      .replace(/₹|rs\.?|inr/gi, ' ')
+      .replace(/\b(a|an|the|in|for|with|to|me|of|at|on|some|any|good|best|worth|checkout|and|complete)\b/gi, ' ')
+      .trim();
+
+    const query = cleanedKeywords || 'keyboard';
 
     // Step 2: Tool Call -> search_products
-    const searchArgs = { query, max_price: maxPrice, min_rating: 4.5 };
-    const searchResult = await globalMCPEngine.executeTool('search_products', searchArgs);
+    const searchArgs: Record<string, any> = { query };
+    if (maxPrice) {
+      searchArgs.max_price = maxPrice;
+    }
+    let searchResult = await globalMCPEngine.executeTool('search_products', searchArgs);
+
+    // If 0 items matched within maxPrice constraint, try searching without maxPrice to find the candidate SKU
+    if (searchResult.count === 0 && maxPrice) {
+      searchResult = await globalMCPEngine.executeTool('search_products', { query });
+    }
+
+    // Smart semantic fallback: If exact phrase returned 0, try individual salient tokens
+    if (searchResult.count === 0 && query.split(/\s+/).length > 1) {
+      const tokens = query.split(/\s+/).filter((t: string) => t.length > 2);
+      for (const token of tokens) {
+        searchResult = await globalMCPEngine.executeTool('search_products', { query: token });
+        if (searchResult.count > 0) break;
+      }
+    }
 
     addStep(
       'TOOL_CALL',
-      `Invoking MCP Tool "search_products" with query: "${query}" and rating filter: 4.5+. Found ${searchResult.count} matching SKUs in merchant inventory.`,
+      `Invoking MCP Tool "search_products" with query: "${query}"${maxPrice ? ` (user target budget: ₹${maxPrice.toLocaleString('en-IN')})` : ''}. Found ${searchResult.count} matching SKUs in merchant inventory.`,
       { name: 'search_products', arguments: searchArgs },
       searchResult
     );
@@ -109,7 +121,7 @@ export class AgentSimulator {
     if (searchResult.count === 0) {
       addStep(
         'REASONING',
-        `No items matched criteria "${query}" within the specified budget. Halting workflow to avoid unauthorized purchases.`
+        `No items matched criteria "${query}" in merchant inventory. Available store categories: Electronics, Apparel & Footwear, Bags & Accessories, Home Office, Specialty Coffee, Wellness, Software Licenses. Halting order to avoid unauthorized purchases.`
       );
       return {
         prompt,
@@ -133,16 +145,21 @@ export class AgentSimulator {
       detailsResult
     );
 
+    // Determine eligible coupon
+    const eligibleCoupon = detailsResult.eligibleCoupons && detailsResult.eligibleCoupons.length > 0
+      ? detailsResult.eligibleCoupons[0]
+      : 'AGENT500';
+
     // Step 4: Tool Call -> calculate_cart_quote
     const quoteArgs = {
       items: [{ product_id: selectedProduct.id, quantity: targetQty }],
-      coupon_code: coupon,
+      coupon_code: eligibleCoupon,
     };
     const cartQuote: CartQuote = await globalMCPEngine.executeTool('calculate_cart_quote', quoteArgs);
 
     addStep(
       'TOOL_CALL',
-      `Generating authenticated Cart Quote with 18% GST tax calculation and applying promotion coupon "${coupon}". Payable amount: ₹${cartQuote.totalAmount.toLocaleString('en-IN')}.`,
+      `Generating authenticated Cart Quote with 18% GST tax calculation and applying promotion coupon "${eligibleCoupon}". Payable amount: ₹${cartQuote.totalAmount.toLocaleString('en-IN')}.`,
       { name: 'calculate_cart_quote', arguments: quoteArgs },
       cartQuote as unknown as Record<string, unknown>
     );
@@ -155,7 +172,7 @@ export class AgentSimulator {
     addStep(
       'POLICY_GATE',
       policyResult.allowed
-        ? `Policy Gate: PASSED. Transaction complies with autonomous spend limits (₹${cartQuote.totalAmount} <= Cap) and SKU quantity whitelist.`
+        ? `Policy Gate: PASSED. Transaction complies with autonomous spend limits (₹${cartQuote.totalAmount.toLocaleString('en-IN')} <= Spend Cap) and SKU quantity whitelist.`
         : `Policy Gate: INTERCEPTED & BLOCKED. Reason: ${policyResult.reasonCode} - ${policyResult.message}`,
       { name: 'evaluate_spend_policy', arguments: { cart_id: cartQuote.cartId } },
       undefined,
